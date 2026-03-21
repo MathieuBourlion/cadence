@@ -13,22 +13,35 @@ struct StepCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Header row
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(step.typeName)
-                        .font(.headline)
-                    Text(step.configSummary)
-                        .font(.subheadline)
+            // Header row — wrapped in Button to handle expand/collapse
+            Button(action: onTap) {
+                HStack {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        .animation(.spring(duration: 0.2), value: isExpanded)
+                        .frame(width: 16)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.typeName)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text(step.configSummary)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.borderless)
                 }
-                Spacer()
-                Button(action: onRemove) {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
             }
+            .buttonStyle(.plain)
 
             // Expanded editing controls
             if isExpanded {
@@ -44,8 +57,6 @@ struct StepCardView: View {
                 .strokeBorder(borderColor, lineWidth: borderWidth)
                 .opacity(executionState == .running ? pulseOpacity : 1.0)
         )
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
         .onAppear {
             if executionState == .running {
                 withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
@@ -59,9 +70,7 @@ struct StepCardView: View {
                     pulseOpacity = 0.4
                 }
             } else {
-                withAnimation(.default) {
-                    pulseOpacity = 1.0
-                }
+                withAnimation(.default) { pulseOpacity = 1.0 }
             }
         }
         .task(id: isExpanded) {
@@ -73,23 +82,17 @@ struct StepCardView: View {
 
     private var borderColor: Color {
         switch executionState {
-        case .idle:
-            return step.isComplete ? .clear : .yellow
-        case .running:
-            return .green
-        case .completed:
-            return .green
+        case .idle:      return step.isComplete ? .clear : .yellow
+        case .running:   return .green
+        case .completed: return .green
         }
     }
 
     private var borderWidth: CGFloat {
         switch executionState {
-        case .idle:
-            return step.isComplete ? 0 : 1.5
-        case .running:
-            return 2
-        case .completed:
-            return 1.5
+        case .idle:      return step.isComplete ? 0 : 1.5
+        case .running:   return 2
+        case .completed: return 1.5
         }
     }
 
@@ -107,29 +110,29 @@ struct StepCardView: View {
 
         case .setISO(let mode):
             cameraValueEditor(
-                label: "ISO",
                 mode: mode,
+                label: "ISO",
                 values: SequenceStep.isoValues,
-                defaultValue: "400",
-                makeStep: { .setISO(mode: $0) }
+                defaultAbsolute: "400",
+                makeStep: { step = .setISO(mode: $0) }
             )
 
         case .setAperture(let mode):
             cameraValueEditor(
-                label: "Aperture",
                 mode: mode,
+                label: "Aperture",
                 values: SequenceStep.apertureValues,
-                defaultValue: "f/5.6",
-                makeStep: { .setAperture(mode: $0) }
+                defaultAbsolute: "f/5.6",
+                makeStep: { step = .setAperture(mode: $0) }
             )
 
         case .setShutterSpeed(let mode):
             cameraValueEditor(
-                label: "Shutter Speed",
                 mode: mode,
+                label: "Shutter Speed",
                 values: SequenceStep.shutterSpeedValues,
-                defaultValue: "1/125",
-                makeStep: { .setShutterSpeed(mode: $0) }
+                defaultAbsolute: "1/125",
+                makeStep: { step = .setShutterSpeed(mode: $0) }
             )
 
         case .autofocus:
@@ -173,70 +176,57 @@ struct StepCardView: View {
     @ViewBuilder
     private func switchCameraEditor(mode: SwitchCameraMode) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Mode picker: specific or next
             Picker("Mode", selection: Binding(
-                get: {
-                    if case .next = mode { return "next" }
-                    return "specific"
-                },
+                get: { if case .next = mode { return "next" } else { return "specific" } },
                 set: { newMode in
-                    if newMode == "next" {
-                        step = .switchCamera(mode: .next)
-                    } else {
-                        step = .switchCamera(mode: .specific(cameraName: nil))
-                    }
+                    step = .switchCamera(mode: newMode == "next" ? .next : .specific(cameraName: nil))
                 }
             )) {
-                Text("Specific camera").tag("specific")
-                Text("Next camera (wraps)").tag("next")
+                Text("Specific").tag("specific")
+                Text("Next").tag("next")
             }
             .pickerStyle(.segmented)
 
-            // If specific mode, show camera picker
-            if case .specific(let currentName) = mode {
+            switch mode {
+            case .specific:
                 if let error = cameraListError {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(error).font(.caption).foregroundStyle(.secondary)
                 } else if cameraList.isEmpty {
                     Text("Connect cameras in Capture One to select")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondary)
                 } else {
                     Picker("Camera", selection: Binding(
-                        get: { currentName ?? "" },
+                        get: { if case .specific(let name) = mode { return name ?? "" } else { return "" } },
                         set: { step = .switchCamera(mode: .specific(cameraName: $0.isEmpty ? nil : $0)) }
                     )) {
                         Text("Select camera...").tag("")
-                        ForEach(cameraList, id: \.self) { name in
-                            Text(name).tag(name)
-                        }
+                        ForEach(cameraList, id: \.self) { Text($0).tag($0) }
                     }
                 }
+            case .next:
+                Text("Selects the next camera in Capture One's list, wrapping back to the first.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
 
     @ViewBuilder
     private func cameraValueEditor(
-        label: String,
         mode: CameraValueMode,
+        label: String,
         values: [String],
-        defaultValue: String,
-        makeStep: @escaping (CameraValueMode) -> SequenceStep
+        defaultAbsolute: String,
+        makeStep: @escaping (CameraValueMode) -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Mode picker: absolute or relative
             Picker("Mode", selection: Binding(
-                get: {
-                    if case .relative = mode { return "relative" }
-                    return "absolute"
-                },
+                get: { if case .relative = mode { return "relative" } else { return "absolute" } },
                 set: { newMode in
                     if newMode == "relative" {
-                        step = makeStep(.relative(direction: .up, steps: 1))
+                        makeStep(.relative(direction: .up, steps: 1))
                     } else {
-                        step = makeStep(.absolute(value: defaultValue))
+                        makeStep(.absolute(value: defaultAbsolute))
                     }
                 }
             )) {
@@ -249,24 +239,27 @@ struct StepCardView: View {
             case .absolute(let value):
                 Picker(label, selection: Binding(
                     get: { value },
-                    set: { step = makeStep(.absolute(value: $0)) }
+                    set: { makeStep(.absolute(value: $0)) }
                 )) {
                     ForEach(values, id: \.self) { Text($0).tag($0) }
                 }
-            case .relative(let direction, let steps):
+
+            case .relative(let dir, let steps):
                 HStack {
                     Picker("Direction", selection: Binding(
-                        get: { direction },
-                        set: { step = makeStep(.relative(direction: $0, steps: steps)) }
+                        get: { dir },
+                        set: { makeStep(.relative(direction: $0, steps: steps)) }
                     )) {
-                        ForEach(RelativeDirection.allCases, id: \.self) {
-                            Text($0 == .up ? "Up" : "Down").tag($0)
-                        }
+                        Text("Up").tag(RelativeDirection.up)
+                        Text("Down").tag(RelativeDirection.down)
                     }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 120)
+
                     Stepper("\(steps) step\(steps == 1 ? "" : "s")", value: Binding(
                         get: { steps },
-                        set: { step = makeStep(.relative(direction: direction, steps: max(1, $0))) }
-                    ), in: 1...10)
+                        set: { makeStep(.relative(direction: dir, steps: max(1, min(18, $0)))) }
+                    ), in: 1...18)
                 }
             }
         }
@@ -281,8 +274,7 @@ struct StepCardView: View {
             // If previously selected camera is no longer available, reset to incomplete
             if case .switchCamera(let mode) = step,
                case .specific(let name) = mode,
-               let name,
-               !cameras.contains(name) {
+               let name, !cameras.contains(name) {
                 step = .switchCamera(mode: .specific(cameraName: nil))
             }
         case .failure:
