@@ -550,7 +550,7 @@ final class SequenceRunnerTests: XCTestCase {
         let runner = SequenceRunner()
         XCTAssertFalse(runner.isRunning)
         XCTAssertNil(runner.currentStepIndex)
-        // NOTE: currentIteration test is in Task 4 (added after SequenceRunner is updated)
+        XCTAssertEqual(runner.currentIteration, 0)
         XCTAssertNil(runner.error)
         XCTAssertNil(runner.toastMessage)
     }
