@@ -297,3 +297,68 @@ final class AppleScriptBridgeTests: XCTestCase {
         XCTAssertNil(AppleScriptBridge.readBackScript(for: .wait(seconds: 5)))
     }
 }
+
+final class PresetManagerTests: XCTestCase {
+
+    var tempDirectory: URL!
+    var manager: PresetManager!
+
+    override func setUp() {
+        super.setUp()
+        // Use a temp directory so tests don't pollute ~/Library
+        tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CadenceTests-\(UUID().uuidString)", isDirectory: true)
+        manager = PresetManager(presetsDirectory: tempDirectory)
+    }
+
+    override func tearDown() {
+        try? FileManager.default.removeItem(at: tempDirectory)
+        super.tearDown()
+    }
+
+    func test_saveAndLoad_roundTrip() throws {
+        let seq = CadenceSequence(name: "Test", steps: [
+            .capture(postCaptureDelay: 5),
+            .setISO(value: "800")
+        ])
+        try manager.save(seq, name: "Test")
+        let loaded = try manager.load(name: "Test")
+        XCTAssertEqual(loaded.steps.count, 2)
+        XCTAssertEqual(loaded.steps[0], .capture(postCaptureDelay: 5))
+        XCTAssertEqual(loaded.steps[1], .setISO(value: "800"))
+    }
+
+    func test_save_stripsCameraNames() throws {
+        let seq = CadenceSequence(steps: [
+            .switchCamera(cameraName: "Canon R5")
+        ])
+        try manager.save(seq, name: "CamTest")
+        let loaded = try manager.load(name: "CamTest")
+        XCTAssertEqual(loaded.steps[0], .switchCamera(cameraName: nil))
+    }
+
+    func test_delete_removesFile() throws {
+        let seq = CadenceSequence(steps: [.autofocus])
+        try manager.save(seq, name: "ToDelete")
+        XCTAssertTrue(manager.presetExists(name: "ToDelete"))
+        try manager.delete(name: "ToDelete")
+        XCTAssertFalse(manager.presetExists(name: "ToDelete"))
+    }
+
+    func test_listPresets_returnsAlphabeticallySorted() throws {
+        for name in ["Zebra", "Alpha", "Mango"] {
+            try manager.save(CadenceSequence(steps: [.autofocus]), name: name)
+        }
+        let list = try manager.listPresets()
+        XCTAssertEqual(list, ["Alpha", "Mango", "Zebra"])
+    }
+
+    func test_listPresets_emptyWhenNoPresets() throws {
+        let list = try manager.listPresets()
+        XCTAssertTrue(list.isEmpty)
+    }
+
+    func test_presetExists_falseForMissing() {
+        XCTAssertFalse(manager.presetExists(name: "NonExistent"))
+    }
+}
