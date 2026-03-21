@@ -59,7 +59,9 @@ struct StepCardView: View {
                     pulseOpacity = 0.4
                 }
             } else {
-                pulseOpacity = 1.0
+                withAnimation(.default) {
+                    pulseOpacity = 1.0
+                }
             }
         }
         .task(id: isExpanded) {

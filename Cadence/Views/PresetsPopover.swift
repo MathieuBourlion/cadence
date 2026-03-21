@@ -5,9 +5,19 @@ struct PresetsPopover: View {
     let hasExistingSteps: Bool
     let onLoad: (CadenceSequence) -> Void
 
+    enum ActiveAlert: Identifiable {
+        case confirmDelete(String)
+        case confirmLoad(String)
+        var id: String {
+            switch self {
+            case .confirmDelete(let name): return "delete-\(name)"
+            case .confirmLoad(let name): return "load-\(name)"
+            }
+        }
+    }
+
     @State private var presets: [String] = []
-    @State private var showDeleteConfirmation: String?
-    @State private var pendingLoadName: String?
+    @State private var activeAlert: ActiveAlert?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -29,7 +39,7 @@ struct PresetsPopover: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button("Delete", role: .destructive) {
-                            showDeleteConfirmation = name
+                            activeAlert = .confirmDelete(name)
                         }
                     }
                     if name != presets.last {
@@ -41,30 +51,28 @@ struct PresetsPopover: View {
         .padding(.vertical, 8)
         .frame(width: 220)
         .onAppear { refreshPresets() }
-        .alert("Delete Preset", isPresented: .init(
-            get: { showDeleteConfirmation != nil },
-            set: { if !$0 { showDeleteConfirmation = nil } }
-        )) {
-            Button("Delete", role: .destructive) {
-                if let name = showDeleteConfirmation {
-                    try? presetManager.delete(name: name)
-                    refreshPresets()
-                }
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .confirmDelete(let name):
+                return Alert(
+                    title: Text("Delete Preset"),
+                    message: Text("Delete preset \"\(name)\"?"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        try? presetManager.delete(name: name)
+                        refreshPresets()
+                    },
+                    secondaryButton: .cancel()
+                )
+            case .confirmLoad(let name):
+                return Alert(
+                    title: Text("Replace Sequence"),
+                    message: Text("Loading a preset will replace your current sequence."),
+                    primaryButton: .destructive(Text("Replace")) {
+                        loadPreset(name)
+                    },
+                    secondaryButton: .cancel()
+                )
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Delete preset \"\(showDeleteConfirmation ?? "")\"?")
-        }
-        .alert("Replace Sequence", isPresented: .init(
-            get: { pendingLoadName != nil },
-            set: { if !$0 { pendingLoadName = nil } }
-        )) {
-            Button("Replace", role: .destructive) {
-                if let name = pendingLoadName { loadPreset(name) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Loading a preset will replace your current sequence.")
         }
     }
 
@@ -74,7 +82,7 @@ struct PresetsPopover: View {
 
     private func attemptLoad(_ name: String) {
         if hasExistingSteps {
-            pendingLoadName = name
+            activeAlert = .confirmLoad(name)
         } else {
             loadPreset(name)
         }
