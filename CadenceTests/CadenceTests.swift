@@ -362,3 +362,43 @@ final class PresetManagerTests: XCTestCase {
         XCTAssertFalse(manager.presetExists(name: "NonExistent"))
     }
 }
+
+@MainActor
+final class SequenceRunnerTests: XCTestCase {
+
+    func test_initialState() {
+        let runner = SequenceRunner()
+        XCTAssertFalse(runner.isRunning)
+        XCTAssertNil(runner.currentStepIndex)
+        XCTAssertNil(runner.error)
+        XCTAssertNil(runner.toastMessage)
+    }
+
+    func test_postStepDelay_capture_usesConfiguredDelay() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .capture(postCaptureDelay: 5)), 5.0)
+    }
+
+    func test_postStepDelay_capture_enforcesMinimum3() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .capture(postCaptureDelay: 1)), 3.0)
+    }
+
+    func test_postStepDelay_autofocus_is1s() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .autofocus), 1.0)
+    }
+
+    func test_postStepDelay_moveFocus_is0_8s() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .moveFocus(direction: .nearer, amount: .small)), 0.8)
+    }
+
+    func test_postStepDelay_wait_usesSeconds() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .wait(seconds: 10)), 10.0)
+    }
+
+    func test_postStepDelay_setISO_isZero() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .setISO(value: "400")), 0.0)
+    }
+
+    func test_postStepDelay_switchCamera_isZero() {
+        XCTAssertEqual(SequenceRunner.postStepDelay(for: .switchCamera(cameraName: "Canon")), 0.0)
+    }
+}

@@ -11,6 +11,11 @@ struct AppleScriptError: Error {
         self.message = errorDictionary[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
         self.errorNumber = errorDictionary[NSAppleScript.errorNumber] as? Int
     }
+
+    init(message: String, errorNumber: Int? = nil) {
+        self.message = message
+        self.errorNumber = errorNumber
+    }
 }
 
 // MARK: - Bridge
