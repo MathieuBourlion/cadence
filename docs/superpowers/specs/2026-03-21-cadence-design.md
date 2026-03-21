@@ -48,7 +48,14 @@ Each step has a computed `isComplete` property. All steps are always complete ex
 
 **`SequenceRunner`** (`@Observable`) — owns execution state: `currentStepIndex: Int?`, `isRunning: Bool`, `error: Error?`. Runs steps on a background `Task`. Cancellable via `task.cancel()`.
 
-**`AppleScriptBridge`** — stateless struct with static methods. One method per command type. Each builds an AppleScript string and executes via `NSAppleScript.executeAndReturnError`. Returns `Result<String?, AppleScriptError>`.
+**`AppleScriptBridge`** — stateless struct with static methods. One method per command type. Each builds an AppleScript string and executes via `NSAppleScript.executeAndReturnError`.
+
+Return types vary by method:
+- Most commands return `Result<Void, AppleScriptError>` (fire-and-forget)
+- Read-back commands (ISO, aperture, shutter speed) return `Result<String, AppleScriptError>` — extracted from the `NSAppleEventDescriptor.stringValue`
+- Camera list query returns `Result<[String], AppleScriptError>` — the descriptor is iterated as a list of string items
+
+`AppleScriptError` wraps the error dictionary from `NSAppleScript.executeAndReturnError`, exposing at minimum `message: String` (from `NSAppleScript.errorMessage` key) and optionally `errorNumber: Int`.
 
 **`PresetManager`** — save/load/delete JSON files in `~/Library/Application Support/Cadence/presets/`.
 
@@ -98,7 +105,7 @@ Cadence/
 - Use standard SwiftUI controls everywhere (`Picker`, `Stepper`, `Button`, `TextField`, `List`, `.popover`, `.sheet`, `.contextMenu`, `.alert`)
 - No custom-drawn controls — rely on native macOS dark mode widgets
 - Apple design language updates flow through automatically
-- Custom visuals limited to: step card borders (execution state) and the status dot
+- Custom visuals limited to: step card borders (execution state)
 
 ### Layout
 
@@ -206,14 +213,14 @@ Switch Camera steps query Capture One for connected cameras rather than using fr
 
 1. **Pre-flight:** Execute `name of application "Capture One"` — if error, show alert: "Capture One is not running. Open Capture One and try again." Abort.
 2. **Pre-flight:** Verify no steps are incomplete (belt-and-suspenders).
-3. Set `isRunning = true`. Start a detached `Task`.
+3. Set `isRunning = true`. Start a `Task` (not detached — inherits actor context from `@Observable` runner).
 4. **For each step:**
    a. Update `currentStepIndex` on `@MainActor`
    b. Build AppleScript string via `AppleScriptBridge`
    c. Execute via `NSAppleScript.executeAndReturnError`
-   d. Check for errors — on failure, show alert with error text, halt sequence
-   e. For camera settings (ISO, aperture, shutter speed): read back the value, show warning toast if it differs from requested
-   f. Apply post-step delay via `try await Task.sleep(nanoseconds:)` — checks for cancellation
+   d. Check for errors — if `NSAppleScript.executeAndReturnError` returns an error, show alert with error text, halt sequence
+   e. For camera settings (ISO, aperture, shutter speed): execute a second read-back script, compare returned string to requested value. If different, show warning toast. (This is distinct from an AppleScript error — the set command succeeded but the camera used a different value.)
+   f. Apply post-step delay via `try await Task.sleep(nanoseconds:)` — checks for cancellation. Delay source: `postCaptureDelay` for Capture steps (min 3s), hardcoded 1s for Autofocus, hardcoded 0.8s for Move Focus, `Task.sleep` for Wait steps, no delay for others.
 5. **On cancel:** `task.cancel()` causes `Task.sleep` to throw `CancellationError`. Clean up, reset UI.
 6. **On completion:** Reset `isRunning` and `currentStepIndex`.
 
@@ -228,19 +235,24 @@ Switch Camera steps query Capture One for connected cameras rather than using fr
 
 ### AppleScript Commands
 
+All commands target the **currently selected camera** in Capture One. Use the Switch Camera step to change which camera is active before issuing capture or settings commands.
+
 | Step | AppleScript |
 |---|---|
 | Capture | `tell application "Capture One" to capture` |
-| Switch Camera | `select camera of front document of application "Capture One" name "<cameraName>"` |
+| Switch Camera | `tell application "Capture One" to select camera of front document name "<cameraName>"` |
 | Set ISO | `set ISO of camera of front document of application "Capture One" to "<value>"` |
 | Set Aperture | `set aperture of camera of front document of application "Capture One" to "<value>"` |
 | Set Shutter Speed | `set shutter speed of camera of front document of application "Capture One" to "<value>"` |
 | Autofocus | `set autofocusing of camera of front document of application "Capture One" to true` |
 | Move Focus | `tell application "Capture One" to adjust focus of camera of front document by amount <n> sync true` |
+| Camera list | `available camera identifiers of front document of application "Capture One"` (returns list of strings) |
 | Read-back (ISO) | `ISO of camera of front document of application "Capture One"` |
 | Read-back (Aperture) | `aperture of camera of front document of application "Capture One"` |
 | Read-back (Shutter) | `shutter speed of camera of front document of application "Capture One"` |
-| Wait | `delay <n>` (or use `Task.sleep` instead of AppleScript delay) |
+| Wait | No AppleScript — uses `Task.sleep` for cancellation support (see note below) |
+
+**Note on shutter speed string values:** Values like `1"`, `2"`, `15"` contain double-quote characters. When building AppleScript strings, these must be escaped (e.g., `"1\""` or use single-character escaping). The implementation should handle this in `AppleScriptBridge`.
 
 **Move Focus amount mapping:**
 
@@ -319,3 +331,4 @@ The Wait step should use Swift `Task.sleep` rather than AppleScript `delay`. Thi
 - Code signing / notarization (users build from source or download GitHub release)
 - Windows support
 - Direct camera SDK integration
+- Undo for step deletion (use Reset cautiously)
