@@ -22,6 +22,11 @@ class FloatingPanel: NSPanel {
         // No fullscreen capability
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
+        // Don't hide when the app deactivates — keeps the panel visible when
+        // switching to Capture One or other apps, and prevents AppKit from
+        // closing the panel (which would quit the app via terminateAfterLastWindowClosed)
+        hidesOnDeactivate = false
+
         // Vibrancy background (.hudWindow = dark blurred panel look)
         let visualEffect = NSVisualEffectView()
         visualEffect.material = .hudWindow

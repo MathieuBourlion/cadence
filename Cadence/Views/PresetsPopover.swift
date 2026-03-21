@@ -5,73 +5,64 @@ struct PresetsPopover: View {
     let hasExistingSteps: Bool
     let onLoad: (CadenceSequence) -> Void
 
-    enum ActiveAlert: Identifiable {
-        case confirmDelete(String)
-        case confirmLoad(String)
-        var id: String {
-            switch self {
-            case .confirmDelete(let name): return "delete-\(name)"
-            case .confirmLoad(let name): return "load-\(name)"
-            }
-        }
-    }
-
     @State private var presets: [String] = []
-    @State private var activeAlert: ActiveAlert?
-    @Environment(\.dismiss) private var dismiss
+    @State private var deleteTargetName: String = ""
+    @State private var showDeleteAlert = false
+    @State private var loadTargetName: String = ""
+    @State private var showLoadAlert = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if presets.isEmpty {
-                Text("No saved presets")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding()
-            } else {
-                ForEach(presets, id: \.self) { name in
-                    Button(action: { attemptLoad(name) }) {
-                        Text(name)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 12)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            activeAlert = .confirmDelete(name)
-                        }
-                    }
-                    if name != presets.last {
-                        Divider()
-                    }
-                }
-            }
+            presetList
         }
         .padding(.vertical, 8)
         .frame(width: 220)
         .onAppear { refreshPresets() }
-        .alert(item: $activeAlert) { alert in
-            switch alert {
-            case .confirmDelete(let name):
-                return Alert(
-                    title: Text("Delete Preset"),
-                    message: Text("Delete preset \"\(name)\"?"),
-                    primaryButton: .destructive(Text("Delete")) {
-                        try? presetManager.delete(name: name)
-                        refreshPresets()
-                    },
-                    secondaryButton: .cancel()
-                )
-            case .confirmLoad(let name):
-                return Alert(
-                    title: Text("Replace Sequence"),
-                    message: Text("Loading a preset will replace your current sequence."),
-                    primaryButton: .destructive(Text("Replace")) {
-                        loadPreset(name)
-                    },
-                    secondaryButton: .cancel()
-                )
+        .alert("Delete Preset", isPresented: $showDeleteAlert) {
+            Button("Delete", role: .destructive) {
+                try? presetManager.delete(name: deleteTargetName)
+                refreshPresets()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Delete preset \"\(deleteTargetName)\"?")
+        }
+        .alert("Replace Sequence", isPresented: $showLoadAlert) {
+            Button("Replace", role: .destructive) {
+                commitLoad(loadTargetName)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Loading a preset will replace your current sequence.")
+        }
+    }
+
+    @ViewBuilder
+    private var presetList: some View {
+        if presets.isEmpty {
+            Text("No saved presets")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding()
+        } else {
+            ForEach(presets, id: \.self) { name in
+                Button(action: { attemptLoad(name) }) {
+                    Text(name)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button("Delete", role: .destructive) {
+                        deleteTargetName = name
+                        showDeleteAlert = true
+                    }
+                }
+                if name != presets.last {
+                    Divider()
+                }
             }
         }
     }
@@ -82,15 +73,16 @@ struct PresetsPopover: View {
 
     private func attemptLoad(_ name: String) {
         if hasExistingSteps {
-            activeAlert = .confirmLoad(name)
+            loadTargetName = name
+            showLoadAlert = true
         } else {
-            loadPreset(name)
+            commitLoad(name)
         }
     }
 
-    private func loadPreset(_ name: String) {
+    private func commitLoad(_ name: String) {
         guard let seq = try? presetManager.load(name: name) else { return }
         onLoad(seq)
-        dismiss()
+        // ContentView's loadPreset sets showPresetsPopover = false, closing this popover
     }
 }
