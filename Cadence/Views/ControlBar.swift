@@ -9,9 +9,22 @@ struct ControlBar: View {
 
     var body: some View {
         HStack {
-            Text("Run")
-            Text("Stop")
-            Text("Reset")
+            if isRunning {
+                Button("Stop", action: onStop)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+            } else {
+                Button("Run", action: onRun)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .disabled(!canRun)
+            }
+
+            Spacer()
+
+            Button("Reset", action: onReset)
+                .buttonStyle(.bordered)
+                .disabled(isRunning)
         }
     }
 }
