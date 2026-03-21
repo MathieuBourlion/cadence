@@ -32,6 +32,7 @@ class FloatingPanel: NSPanel {
         let hostingView = NSHostingView(rootView:
             contentView
                 .preferredColorScheme(.dark)
+                .tint(Color(red: 0.95, green: 0.60, blue: 0.10))  // Capture One amber
         )
         hostingView.translatesAutoresizingMaskIntoConstraints = false
 

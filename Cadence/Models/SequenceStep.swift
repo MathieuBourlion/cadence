@@ -43,8 +43,7 @@ enum SequenceStep: Codable, Equatable {
             let config = try container.decode([String: Int].self, forKey: .config)
             self = .capture(postCaptureDelay: config["postCaptureDelay"] ?? 3)
         case "switchCamera":
-            let config = try container.decode([String: String].self, forKey: .config)
-            self = .switchCamera(cameraName: config["cameraName"])
+            self = .switchCamera(cameraName: nil)
         case "setISO":
             let config = try container.decode([String: String].self, forKey: .config)
             self = .setISO(value: config["value"] ?? "400")

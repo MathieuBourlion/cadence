@@ -30,7 +30,9 @@ enum AppleScriptBridge {
     @discardableResult
     static func execute(_ script: String) -> Result<Void, AppleScriptError> {
         var errorDict: NSDictionary?
-        let appleScript = NSAppleScript(source: script)!
+        guard let appleScript = NSAppleScript(source: script) else {
+            return .failure(AppleScriptError(message: "Failed to compile AppleScript"))
+        }
         appleScript.executeAndReturnError(&errorDict)
         if let errorDict {
             return .failure(AppleScriptError(errorDictionary: errorDict))
@@ -41,7 +43,9 @@ enum AppleScriptBridge {
     /// Execute an AppleScript and return the string result.
     static func executeForString(_ script: String) -> Result<String, AppleScriptError> {
         var errorDict: NSDictionary?
-        let appleScript = NSAppleScript(source: script)!
+        guard let appleScript = NSAppleScript(source: script) else {
+            return .failure(AppleScriptError(message: "Failed to compile AppleScript"))
+        }
         let descriptor = appleScript.executeAndReturnError(&errorDict)
         if let errorDict {
             return .failure(AppleScriptError(errorDictionary: errorDict))
@@ -52,7 +56,9 @@ enum AppleScriptBridge {
     /// Execute an AppleScript that returns a list of strings.
     static func executeForList(_ script: String) -> Result<[String], AppleScriptError> {
         var errorDict: NSDictionary?
-        let appleScript = NSAppleScript(source: script)!
+        guard let appleScript = NSAppleScript(source: script) else {
+            return .failure(AppleScriptError(message: "Failed to compile AppleScript"))
+        }
         let descriptor = appleScript.executeAndReturnError(&errorDict)
         if let errorDict {
             return .failure(AppleScriptError(errorDictionary: errorDict))

@@ -30,12 +30,6 @@ final class SequenceRunner {
     func run(steps: [SequenceStep]) {
         guard !isRunning else { return }
 
-        // Pre-flight: check Capture One is running
-        if case .failure = AppleScriptBridge.ping() {
-            error = AppleScriptError(message: "Capture One is not running. Open Capture One and try again.")
-            return
-        }
-
         // Pre-flight: check all steps complete (belt-and-suspenders)
         guard steps.allSatisfy(\.isComplete) else {
             error = AppleScriptError(message: "Complete all steps before running.")
@@ -47,27 +41,37 @@ final class SequenceRunner {
         currentStepIndex = nil
 
         runTask = Task {
+            // Pre-flight: check Capture One is running (run off main thread)
+            let pingResult = await Task.detached(priority: .userInitiated) {
+                AppleScriptBridge.ping()
+            }.value
+            if case .failure = pingResult {
+                error = AppleScriptError(message: "Capture One is not running. Open Capture One and try again.")
+                isRunning = false
+                return
+            }
+
             for (index, step) in steps.enumerated() {
                 if Task.isCancelled { break }
 
                 currentStepIndex = index
 
-                // Execute the step's AppleScript (Wait has nil script — handled by delay below)
+                // Execute the step's AppleScript off main thread (Wait has nil script — handled by delay below)
                 if let script = AppleScriptBridge.scriptForStep(step) {
-                    let result = AppleScriptBridge.execute(script)
+                    let result = await executeOffMainThread { AppleScriptBridge.execute(script) }
                     if case .failure(let scriptError) = result {
                         error = scriptError
                         break
                     }
 
-                    // Read-back verification for camera settings
+                    // Read-back verification
                     if let readBackScript = AppleScriptBridge.readBackScript(for: step),
                        let requestedVal = requestedValue(for: step) {
-                        if case .success(let actualValue) = AppleScriptBridge.executeForString(readBackScript) {
+                        let readBackResult = await executeStringOffMainThread { AppleScriptBridge.executeForString(readBackScript) }
+                        if case .success(let actualValue) = readBackResult {
                             if actualValue != requestedVal {
                                 let settingName = step.typeName.replacingOccurrences(of: "Set ", with: "")
                                 toastMessage = "Could not set \(settingName) to \(requestedVal). Camera is using \(actualValue)."
-                                // Auto-dismiss toast after 4 seconds
                                 Task {
                                     try? await Task.sleep(for: .seconds(4))
                                     if !Task.isCancelled { toastMessage = nil }
@@ -107,5 +111,14 @@ final class SequenceRunner {
         case .setShutterSpeed(let value): value
         default: nil
         }
+    }
+
+    /// Runs an AppleScript call on a background thread, then returns to the main actor.
+    private func executeOffMainThread(_ work: @escaping () -> Result<Void, AppleScriptError>) async -> Result<Void, AppleScriptError> {
+        await Task.detached(priority: .userInitiated) { work() }.value
+    }
+
+    private func executeStringOffMainThread(_ work: @escaping () -> Result<String, AppleScriptError>) async -> Result<String, AppleScriptError> {
+        await Task.detached(priority: .userInitiated) { work() }.value
     }
 }
