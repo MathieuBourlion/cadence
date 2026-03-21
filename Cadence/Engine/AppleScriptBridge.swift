@@ -72,7 +72,10 @@ enum AppleScriptBridge {
 
     /// Returns success if Capture One is running, error otherwise.
     static func ping() -> Result<Void, AppleScriptError> {
-        execute(#"name of application "Capture One""#)
+        executeForString(#"application "Capture One" is running"#)
+            .flatMap { value in
+                value == "true" ? .success(()) : .failure(AppleScriptError(message: "Capture One is not running"))
+            }
     }
 
     // MARK: - Camera list
