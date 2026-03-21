@@ -102,50 +102,35 @@ struct StepCardView: View {
                 set: { step = .capture(postCaptureDelay: max($0, 3)) }
             ), in: 3...30)
 
-        case .switchCamera(let currentName):
-            if let error = cameraListError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if cameraList.isEmpty {
-                Text("Connect cameras in Capture One to select")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Picker("Camera", selection: Binding(
-                    get: { currentName ?? "" },
-                    set: { step = .switchCamera(cameraName: $0.isEmpty ? nil : $0) }
-                )) {
-                    Text("Select camera...").tag("")
-                    ForEach(cameraList, id: \.self) { name in
-                        Text(name).tag(name)
-                    }
-                }
-            }
+        case .switchCamera(let mode):
+            switchCameraEditor(mode: mode)
 
-        case .setISO(let value):
-            Picker("ISO", selection: Binding(
-                get: { value },
-                set: { step = .setISO(value: $0) }
-            )) {
-                ForEach(SequenceStep.isoValues, id: \.self) { Text($0).tag($0) }
-            }
+        case .setISO(let mode):
+            cameraValueEditor(
+                label: "ISO",
+                mode: mode,
+                values: SequenceStep.isoValues,
+                defaultValue: "400",
+                makeStep: { .setISO(mode: $0) }
+            )
 
-        case .setAperture(let value):
-            Picker("Aperture", selection: Binding(
-                get: { value },
-                set: { step = .setAperture(value: $0) }
-            )) {
-                ForEach(SequenceStep.apertureValues, id: \.self) { Text($0).tag($0) }
-            }
+        case .setAperture(let mode):
+            cameraValueEditor(
+                label: "Aperture",
+                mode: mode,
+                values: SequenceStep.apertureValues,
+                defaultValue: "f/5.6",
+                makeStep: { .setAperture(mode: $0) }
+            )
 
-        case .setShutterSpeed(let value):
-            Picker("Shutter Speed", selection: Binding(
-                get: { value },
-                set: { step = .setShutterSpeed(value: $0) }
-            )) {
-                ForEach(SequenceStep.shutterSpeedValues, id: \.self) { Text($0).tag($0) }
-            }
+        case .setShutterSpeed(let mode):
+            cameraValueEditor(
+                label: "Shutter Speed",
+                mode: mode,
+                values: SequenceStep.shutterSpeedValues,
+                defaultValue: "1/125",
+                makeStep: { .setShutterSpeed(mode: $0) }
+            )
 
         case .autofocus:
             Text("Triggers autofocus then waits 1 second")
@@ -185,6 +170,108 @@ struct StepCardView: View {
         }
     }
 
+    @ViewBuilder
+    private func switchCameraEditor(mode: SwitchCameraMode) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Mode picker: specific or next
+            Picker("Mode", selection: Binding(
+                get: {
+                    if case .next = mode { return "next" }
+                    return "specific"
+                },
+                set: { newMode in
+                    if newMode == "next" {
+                        step = .switchCamera(mode: .next)
+                    } else {
+                        step = .switchCamera(mode: .specific(cameraName: nil))
+                    }
+                }
+            )) {
+                Text("Specific camera").tag("specific")
+                Text("Next camera (wraps)").tag("next")
+            }
+            .pickerStyle(.segmented)
+
+            // If specific mode, show camera picker
+            if case .specific(let currentName) = mode {
+                if let error = cameraListError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if cameraList.isEmpty {
+                    Text("Connect cameras in Capture One to select")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Picker("Camera", selection: Binding(
+                        get: { currentName ?? "" },
+                        set: { step = .switchCamera(mode: .specific(cameraName: $0.isEmpty ? nil : $0)) }
+                    )) {
+                        Text("Select camera...").tag("")
+                        ForEach(cameraList, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func cameraValueEditor(
+        label: String,
+        mode: CameraValueMode,
+        values: [String],
+        defaultValue: String,
+        makeStep: @escaping (CameraValueMode) -> SequenceStep
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Mode picker: absolute or relative
+            Picker("Mode", selection: Binding(
+                get: {
+                    if case .relative = mode { return "relative" }
+                    return "absolute"
+                },
+                set: { newMode in
+                    if newMode == "relative" {
+                        step = makeStep(.relative(direction: .up, steps: 1))
+                    } else {
+                        step = makeStep(.absolute(value: defaultValue))
+                    }
+                }
+            )) {
+                Text("Absolute").tag("absolute")
+                Text("Relative").tag("relative")
+            }
+            .pickerStyle(.segmented)
+
+            switch mode {
+            case .absolute(let value):
+                Picker(label, selection: Binding(
+                    get: { value },
+                    set: { step = makeStep(.absolute(value: $0)) }
+                )) {
+                    ForEach(values, id: \.self) { Text($0).tag($0) }
+                }
+            case .relative(let direction, let steps):
+                HStack {
+                    Picker("Direction", selection: Binding(
+                        get: { direction },
+                        set: { step = makeStep(.relative(direction: $0, steps: steps)) }
+                    )) {
+                        ForEach(RelativeDirection.allCases, id: \.self) {
+                            Text($0 == .up ? "Up" : "Down").tag($0)
+                        }
+                    }
+                    Stepper("\(steps) step\(steps == 1 ? "" : "s")", value: Binding(
+                        get: { steps },
+                        set: { step = makeStep(.relative(direction: direction, steps: max(1, $0))) }
+                    ), in: 1...10)
+                }
+            }
+        }
+    }
+
     private func fetchCameras() async {
         cameraListError = nil
         let result = AppleScriptBridge.fetchCameraList()
@@ -192,8 +279,11 @@ struct StepCardView: View {
         case .success(let cameras):
             cameraList = cameras
             // If previously selected camera is no longer available, reset to incomplete
-            if case .switchCamera(let name) = step, let name, !cameras.contains(name) {
-                step = .switchCamera(cameraName: nil)
+            if case .switchCamera(let mode) = step,
+               case .specific(let name) = mode,
+               let name,
+               !cameras.contains(name) {
+                step = .switchCamera(mode: .specific(cameraName: nil))
             }
         case .failure:
             cameraListError = "Connect cameras in Capture One to select"

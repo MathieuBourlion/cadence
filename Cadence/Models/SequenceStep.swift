@@ -13,6 +13,64 @@ enum FocusAmount: String, Codable, CaseIterable {
     case large
 }
 
+enum RelativeDirection: String, Codable, CaseIterable {
+    case up, down
+}
+
+enum SwitchCameraMode: Codable, Equatable {
+    case specific(cameraName: String?)
+    case next
+
+    private enum CodingKeys: String, CodingKey { case mode }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let mode = (try? container.decode(String.self, forKey: .mode)) ?? "specific"
+        self = mode == "next" ? .next : .specific(cameraName: nil)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .specific: try container.encode("specific", forKey: .mode)
+        case .next:     try container.encode("next", forKey: .mode)
+        }
+    }
+}
+
+enum CameraValueMode: Codable, Equatable {
+    case absolute(value: String)
+    case relative(direction: RelativeDirection, steps: Int)
+
+    private enum CodingKeys: String, CodingKey { case mode, value, direction, steps }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let mode = (try? container.decode(String.self, forKey: .mode)) ?? "absolute"
+        if mode == "relative" {
+            let direction = try container.decode(RelativeDirection.self, forKey: .direction)
+            let steps = try container.decode(Int.self, forKey: .steps)
+            self = .relative(direction: direction, steps: steps)
+        } else {
+            let value = (try? container.decode(String.self, forKey: .value)) ?? ""
+            self = .absolute(value: value)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .absolute(let value):
+            try container.encode("absolute", forKey: .mode)
+            try container.encode(value, forKey: .value)
+        case .relative(let direction, let steps):
+            try container.encode("relative", forKey: .mode)
+            try container.encode(direction, forKey: .direction)
+            try container.encode(steps, forKey: .steps)
+        }
+    }
+}
+
 // MARK: - SequenceStep
 
 /// An individual step in a Cadence sequence.
@@ -20,39 +78,40 @@ enum FocusAmount: String, Codable, CaseIterable {
 /// wrap in IdentifiableStep (see ContentView) to get a stable UUID per list item.
 enum SequenceStep: Codable, Equatable {
     case capture(postCaptureDelay: Int)
-    case switchCamera(cameraName: String?)
-    case setISO(value: String)
-    case setAperture(value: String)
-    case setShutterSpeed(value: String)
+    case switchCamera(mode: SwitchCameraMode)
+    case setISO(mode: CameraValueMode)
+    case setAperture(mode: CameraValueMode)
+    case setShutterSpeed(mode: CameraValueMode)
     case autofocus
     case moveFocus(direction: FocusDirection, amount: FocusAmount)
     case wait(seconds: Int)
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey {
-        case type, config
-    }
+    private enum CodingKeys: String, CodingKey { case type, config }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
-
         switch type {
         case "capture":
             let config = try container.decode([String: Int].self, forKey: .config)
             self = .capture(postCaptureDelay: config["postCaptureDelay"] ?? 3)
         case "switchCamera":
-            self = .switchCamera(cameraName: nil)
+            // Old format: {} — defaults to .specific(nil) via SwitchCameraMode.init
+            // New format: { "mode": "specific" } or { "mode": "next" }
+            let mode = (try? container.decode(SwitchCameraMode.self, forKey: .config)) ?? .specific(cameraName: nil)
+            self = .switchCamera(mode: mode)
         case "setISO":
-            let config = try container.decode([String: String].self, forKey: .config)
-            self = .setISO(value: config["value"] ?? "400")
+            // Old format: { "value": "400" } — defaults to .absolute via CameraValueMode.init
+            let mode = (try? container.decode(CameraValueMode.self, forKey: .config)) ?? .absolute(value: "400")
+            self = .setISO(mode: mode)
         case "setAperture":
-            let config = try container.decode([String: String].self, forKey: .config)
-            self = .setAperture(value: config["value"] ?? "f/5.6")
+            let mode = (try? container.decode(CameraValueMode.self, forKey: .config)) ?? .absolute(value: "f/5.6")
+            self = .setAperture(mode: mode)
         case "setShutterSpeed":
-            let config = try container.decode([String: String].self, forKey: .config)
-            self = .setShutterSpeed(value: config["value"] ?? "1/125")
+            let mode = (try? container.decode(CameraValueMode.self, forKey: .config)) ?? .absolute(value: "1/125")
+            self = .setShutterSpeed(mode: mode)
         case "autofocus":
             self = .autofocus
         case "moveFocus":
@@ -75,19 +134,18 @@ enum SequenceStep: Codable, Equatable {
         case .capture(let delay):
             try container.encode("capture", forKey: .type)
             try container.encode(["postCaptureDelay": delay], forKey: .config)
-        case .switchCamera:
+        case .switchCamera(let mode):
             try container.encode("switchCamera", forKey: .type)
-            // Camera name is NOT saved in presets — always loads as incomplete
-            try container.encode([String: String](), forKey: .config)
-        case .setISO(let value):
+            try container.encode(mode, forKey: .config)
+        case .setISO(let mode):
             try container.encode("setISO", forKey: .type)
-            try container.encode(["value": value], forKey: .config)
-        case .setAperture(let value):
+            try container.encode(mode, forKey: .config)
+        case .setAperture(let mode):
             try container.encode("setAperture", forKey: .type)
-            try container.encode(["value": value], forKey: .config)
-        case .setShutterSpeed(let value):
+            try container.encode(mode, forKey: .config)
+        case .setShutterSpeed(let mode):
             try container.encode("setShutterSpeed", forKey: .type)
-            try container.encode(["value": value], forKey: .config)
+            try container.encode(mode, forKey: .config)
         case .autofocus:
             try container.encode("autofocus", forKey: .type)
             try container.encode([String: String](), forKey: .config)
@@ -102,9 +160,9 @@ enum SequenceStep: Codable, Equatable {
 
     // MARK: - Validation
 
-    /// Returns false only for switchCamera steps where no camera has been selected.
     var isComplete: Bool {
-        if case .switchCamera(let name) = self {
+        if case .switchCamera(let mode) = self,
+           case .specific(let name) = mode {
             return name != nil
         }
         return true
@@ -114,14 +172,14 @@ enum SequenceStep: Codable, Equatable {
 
     var typeName: String {
         switch self {
-        case .capture: return "Capture"
-        case .switchCamera: return "Switch Camera"
-        case .setISO: return "Set ISO"
-        case .setAperture: return "Set Aperture"
+        case .capture:        return "Capture"
+        case .switchCamera:   return "Switch Camera"
+        case .setISO:         return "Set ISO"
+        case .setAperture:    return "Set Aperture"
         case .setShutterSpeed: return "Set Shutter Speed"
-        case .autofocus: return "Autofocus"
-        case .moveFocus: return "Move Focus"
-        case .wait: return "Wait"
+        case .autofocus:      return "Autofocus"
+        case .moveFocus:      return "Move Focus"
+        case .wait:           return "Wait"
         }
     }
 
@@ -129,14 +187,29 @@ enum SequenceStep: Codable, Equatable {
         switch self {
         case .capture(let delay):
             return "Post-capture delay: \(delay)s"
-        case .switchCamera(let name):
-            return name ?? "⚠ No camera selected"
-        case .setISO(let value):
-            return "ISO \(value)"
-        case .setAperture(let value):
-            return value
-        case .setShutterSpeed(let value):
-            return value
+        case .switchCamera(let mode):
+            switch mode {
+            case .specific(let name): return name ?? "⚠ No camera selected"
+            case .next:               return "Next camera (wraps)"
+            }
+        case .setISO(let mode):
+            switch mode {
+            case .absolute(let value): return "ISO \(value)"
+            case .relative(let dir, let steps):
+                return "ISO \(dir == .up ? "+" : "−")\(steps) step\(steps == 1 ? "" : "s")"
+            }
+        case .setAperture(let mode):
+            switch mode {
+            case .absolute(let value): return value
+            case .relative(let dir, let steps):
+                return "Aperture \(dir == .up ? "+" : "−")\(steps) step\(steps == 1 ? "" : "s")"
+            }
+        case .setShutterSpeed(let mode):
+            switch mode {
+            case .absolute(let value): return value
+            case .relative(let dir, let steps):
+                return "Shutter \(dir == .up ? "+" : "−")\(steps) step\(steps == 1 ? "" : "s")"
+            }
         case .autofocus:
             return "Triggers autofocus, waits 1s"
         case .moveFocus(let direction, let amount):

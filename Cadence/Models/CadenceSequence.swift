@@ -16,13 +16,13 @@ struct CadenceSequence: Codable {
         !steps.isEmpty && steps.allSatisfy(\.isComplete)
     }
 
-    /// Returns a copy stripped of camera names (for preset saving).
-    /// Switch Camera steps are reset to incomplete so the user
-    /// must re-select cameras after loading.
+    /// Returns a copy stripped of specific camera names (for preset saving).
+    /// .specific(cameraName:) steps are reset to nil so the user must re-select after loading.
+    /// .next steps are preserved as-is.
     func strippedForPreset() -> CadenceSequence {
         let strippedSteps = steps.map { step -> SequenceStep in
-            if case .switchCamera = step {
-                return .switchCamera(cameraName: nil)
+            if case .switchCamera(let mode) = step, case .specific = mode {
+                return .switchCamera(mode: .specific(cameraName: nil))
             }
             return step
         }

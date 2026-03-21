@@ -106,10 +106,16 @@ final class SequenceRunner {
 
     private func requestedValue(for step: SequenceStep) -> String? {
         switch step {
-        case .setISO(let value): value
-        case .setAperture(let value): value
-        case .setShutterSpeed(let value): value
-        default: nil
+        case .setISO(let mode):
+            if case .absolute(let value) = mode { return value }
+            return nil
+        case .setAperture(let mode):
+            if case .absolute(let value) = mode { return value }
+            return nil
+        case .setShutterSpeed(let mode):
+            if case .absolute(let value) = mode { return value }
+            return nil
+        default: return nil
         }
     }
 
