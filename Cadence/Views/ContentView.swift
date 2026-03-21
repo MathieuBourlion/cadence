@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showPresetsPopover = false
     @State private var showSavePresetSheet = false
     @State private var showResetConfirmation = false
+    @State private var saveError: String?
 
     @State private var runner = SequenceRunner()
     @State private var presetManager = PresetManager()
@@ -131,8 +132,20 @@ struct ContentView: View {
         .sheet(isPresented: $showSavePresetSheet) {
             SavePresetSheet(presetManager: presetManager) { name in
                 let seq = CadenceSequence(name: name, steps: steps.map(\.step))
-                try? presetManager.save(seq, name: name)
+                do {
+                    try presetManager.save(seq, name: name)
+                } catch {
+                    saveError = error.localizedDescription
+                }
             }
+        }
+        .alert("Save Failed", isPresented: .init(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )) {
+            Button("OK") { saveError = nil }
+        } message: {
+            Text(saveError ?? "")
         }
     }
 
