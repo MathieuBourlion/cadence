@@ -1,2 +1,9 @@
 import SwiftUI
-// AddStepPopover — implemented in Task 10
+
+struct AddStepPopover: View {
+    let onAdd: (SequenceStep) -> Void
+
+    var body: some View {
+        Text("Add Step") // placeholder
+    }
+}

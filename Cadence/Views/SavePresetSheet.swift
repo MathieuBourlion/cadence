@@ -1,2 +1,10 @@
 import SwiftUI
-// SavePresetSheet — implemented in Task 12
+
+struct SavePresetSheet: View {
+    let presetManager: PresetManager
+    let onSave: (String) -> Void
+
+    var body: some View {
+        Text("Save Preset") // placeholder
+    }
+}
