@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showPresetsPopover = false
     @State private var showSavePresetSheet = false
     @State private var showResetConfirmation = false
+    @State private var repeatCount: Int = 1
     @State private var saveError: String?
 
     @State private var runner = SequenceRunner()
@@ -27,6 +28,11 @@ struct ContentView: View {
 
     private var canRun: Bool {
         !steps.isEmpty && steps.allSatisfy(\.step.isComplete)
+    }
+
+    private var runLabel: String {
+        guard runner.isRunning else { return "Run" }
+        return repeatCount > 1 ? "Running \(runner.currentIteration)/\(repeatCount)" : "Running…"
     }
 
     var body: some View {
@@ -73,6 +79,10 @@ struct ContentView: View {
                             onRemove: { removeStep(item.id) }
                         )
                         .disabled(runner.isRunning)
+
+                        if index < steps.count - 1 {
+                            StepConnectorView()
+                        }
                     }
 
                     Button(action: { showAddStepPopover.toggle() }) {
@@ -100,9 +110,12 @@ struct ContentView: View {
             ControlBar(
                 isRunning: runner.isRunning,
                 canRun: canRun,
-                onRun: { runner.run(steps: steps.map(\.step)) },
+                runLabel: runLabel,
+                repeatCount: repeatCount,
+                onRun: { runner.run(steps: steps.map(\.step), repeatCount: repeatCount) },
                 onStop: { runner.stop() },
-                onReset: { showResetConfirmation = true }
+                onReset: { showResetConfirmation = true },
+                onRepeatCountChange: { repeatCount = max(1, min(99, $0)) }
             )
             .padding(.horizontal)
             .padding(.vertical, 10)

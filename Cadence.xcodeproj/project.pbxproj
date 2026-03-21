@@ -22,6 +22,7 @@
 		DC18D2B7D12DB2C1A191425A /* StepCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */; };
 		E2C4065E3EFDA0E2ECEC38CC /* PresetsPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAD84C73B943348824970F9 /* PresetsPopover.swift */; };
 		F93450FCB18D8D9DBA669482 /* SequenceStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C889B0073D1E4837A2F58A8 /* SequenceStep.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* StepConnectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		ED22155E1B2A67014FFFB9FE /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		F2DDFF33667C9061C61E9AB4 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		F4030E71F6413A0E5E17D560 /* AddStepPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddStepPopover.swift; sourceTree = "<group>"; };
+		BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepConnectorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -126,6 +128,7 @@
 				DFAD84C73B943348824970F9 /* PresetsPopover.swift */,
 				8B009E89F8680975B1BDFEC4 /* SavePresetSheet.swift */,
 				918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */,
+				BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */,
 				ED22155E1B2A67014FFFB9FE /* ToastView.swift */,
 			);
 			path = Views;
@@ -239,6 +242,7 @@
 				A5807F0577ACD949973B9DB5 /* SequenceRunner.swift in Sources */,
 				F93450FCB18D8D9DBA669482 /* SequenceStep.swift in Sources */,
 				DC18D2B7D12DB2C1A191425A /* StepCardView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* StepConnectorView.swift in Sources */,
 				147CAF199ECE7AE9CA77BE23 /* ToastView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
