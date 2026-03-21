@@ -137,3 +137,60 @@ final class SequenceStepTests: XCTestCase {
         XCTAssertEqual(SequenceStep.wait(seconds: 5).typeName, "Wait")
     }
 }
+
+final class CadenceSequenceTests: XCTestCase {
+
+    func test_emptySequence_cannotRun() {
+        let seq = CadenceSequence(steps: [])
+        XCTAssertFalse(seq.canRun)
+    }
+
+    func test_sequenceWithCompleteSteps_canRun() {
+        let seq = CadenceSequence(steps: [
+            .capture(postCaptureDelay: 3),
+            .setISO(value: "400")
+        ])
+        XCTAssertTrue(seq.canRun)
+    }
+
+    func test_sequenceWithIncompleteStep_cannotRun() {
+        let seq = CadenceSequence(steps: [
+            .capture(postCaptureDelay: 3),
+            .switchCamera(cameraName: nil)  // incomplete
+        ])
+        XCTAssertFalse(seq.canRun)
+    }
+
+    func test_strippedForPreset_removesCameraNames() {
+        let seq = CadenceSequence(steps: [
+            .capture(postCaptureDelay: 3),
+            .switchCamera(cameraName: "Canon EOS R5"),
+            .setISO(value: "400")
+        ])
+        let stripped = seq.strippedForPreset()
+        XCTAssertEqual(stripped.steps[1], .switchCamera(cameraName: nil))
+    }
+
+    func test_strippedForPreset_preservesOtherSteps() {
+        let seq = CadenceSequence(steps: [
+            .capture(postCaptureDelay: 5),
+            .switchCamera(cameraName: "Canon R5"),
+            .wait(seconds: 10)
+        ])
+        let stripped = seq.strippedForPreset()
+        XCTAssertEqual(stripped.steps[0], .capture(postCaptureDelay: 5))
+        XCTAssertEqual(stripped.steps[2], .wait(seconds: 10))
+    }
+
+    func test_codableRoundTrip() throws {
+        let original = CadenceSequence(name: "Test Preset", steps: [
+            .capture(postCaptureDelay: 3),
+            .setISO(value: "800"),
+            .wait(seconds: 5)
+        ])
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(CadenceSequence.self, from: data)
+        XCTAssertEqual(decoded.name, original.name)
+        XCTAssertEqual(decoded.steps.count, original.steps.count)
+    }
+}
