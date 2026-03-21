@@ -90,6 +90,24 @@ enum AppleScriptBridge {
         executeForList(#"available camera identifiers of front document of application "Capture One""#)
     }
 
+    // MARK: - Current value reads (for relative mode)
+
+    static func fetchCurrentCamera() -> Result<String, AppleScriptError> {
+        executeForString(#"name of camera of front document of application "Capture One""#)
+    }
+
+    static func fetchCurrentISO() -> Result<String, AppleScriptError> {
+        executeForString(#"ISO of camera of front document of application "Capture One""#)
+    }
+
+    static func fetchCurrentAperture() -> Result<String, AppleScriptError> {
+        executeForString(#"aperture of camera of front document of application "Capture One""#)
+    }
+
+    static func fetchCurrentShutterSpeed() -> Result<String, AppleScriptError> {
+        executeForString(#"shutter speed of camera of front document of application "Capture One""#)
+    }
+
     // MARK: - Step scripts
 
     /// Build and execute the AppleScript for a given step.
@@ -116,97 +134,21 @@ enum AppleScriptBridge {
                 let escaped = name.replacingOccurrences(of: "\"", with: "\\\"")
                 return #"tell application "Capture One" to select camera of front document name "\#(escaped)""#
             case .next:
-                return """
-                tell application "Capture One"
-                    set doc to front document
-                    set camList to available camera identifiers of doc
-                    set currentCam to name of camera of doc
-                    set camCount to count of camList
-                    set nextIdx to 1
-                    repeat with i from 1 to camCount
-                        if item i of camList is currentCam then
-                            set nextIdx to (i mod camCount) + 1
-                            exit repeat
-                        end if
-                    end repeat
-                    select camera of doc name (item nextIdx of camList)
-                end tell
-                """
+                return nil  // Handled by SequenceRunner.executeNextCamera()
             }
 
         case .setISO(let mode):
-            switch mode {
-            case .absolute(let value):
-                return #"set ISO of camera of front document of application "Capture One" to "\#(value)""#
-            case .relative(let direction, let steps):
-                let op = direction == .up ? "+" : "-"
-                return "tell application \"Capture One\"\n" +
-                    "    set cam to camera of front document\n" +
-                    "    set isoList to {\"100\",\"125\",\"160\",\"200\",\"250\",\"320\",\"400\",\"500\",\"640\",\"800\",\"1000\",\"1250\",\"1600\",\"2000\",\"2500\",\"3200\",\"6400\",\"12800\",\"25600\"}\n" +
-                    "    set currentISO to ISO of cam\n" +
-                    "    set currentIdx to 1\n" +
-                    "    repeat with i from 1 to count of isoList\n" +
-                    "        if item i of isoList is currentISO then\n" +
-                    "            set currentIdx to i\n" +
-                    "            exit repeat\n" +
-                    "        end if\n" +
-                    "    end repeat\n" +
-                    "    set newIdx to currentIdx \(op) \(steps)\n" +
-                    "    if newIdx < 1 then set newIdx to 1\n" +
-                    "    if newIdx > (count of isoList) then set newIdx to count of isoList\n" +
-                    "    set ISO of cam to item newIdx of isoList\n" +
-                    "end tell"
-            }
+            guard case .absolute(let value) = mode else { return nil }
+            return #"set ISO of camera of front document of application "Capture One" to "\#(value)""#
 
         case .setAperture(let mode):
-            switch mode {
-            case .absolute(let value):
-                return #"set aperture of camera of front document of application "Capture One" to "\#(value)""#
-            case .relative(let direction, let steps):
-                let op = direction == .up ? "+" : "-"
-                return "tell application \"Capture One\"\n" +
-                    "    set cam to camera of front document\n" +
-                    "    set apertureList to {\"f/1.4\",\"f/1.8\",\"f/2\",\"f/2.8\",\"f/3.5\",\"f/4\",\"f/5.6\",\"f/6.3\",\"f/7.1\",\"f/8\",\"f/11\",\"f/13\",\"f/16\",\"f/18\",\"f/22\"}\n" +
-                    "    set currentAp to aperture of cam\n" +
-                    "    set currentIdx to 1\n" +
-                    "    repeat with i from 1 to count of apertureList\n" +
-                    "        if item i of apertureList is currentAp then\n" +
-                    "            set currentIdx to i\n" +
-                    "            exit repeat\n" +
-                    "        end if\n" +
-                    "    end repeat\n" +
-                    "    set newIdx to currentIdx \(op) \(steps)\n" +
-                    "    if newIdx < 1 then set newIdx to 1\n" +
-                    "    if newIdx > (count of apertureList) then set newIdx to count of apertureList\n" +
-                    "    set aperture of cam to item newIdx of apertureList\n" +
-                    "end tell"
-            }
+            guard case .absolute(let value) = mode else { return nil }
+            return #"set aperture of camera of front document of application "Capture One" to "\#(value)""#
 
         case .setShutterSpeed(let mode):
-            switch mode {
-            case .absolute(let value):
-                // Shutter speed values like 1", 2" contain quote characters — escape them
-                let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
-                return #"set shutter speed of camera of front document of application "Capture One" to "\#(escaped)""#
-            case .relative(let direction, let steps):
-                let op = direction == .up ? "+" : "-"
-                return "tell application \"Capture One\"\n" +
-                    "    set cam to camera of front document\n" +
-                    "    set shutterList to {\"1/4000\",\"1/2000\",\"1/1000\",\"1/500\",\"1/250\",\"1/125\",\"1/60\",\"1/30\",\"1/15\",\"1/8\",\"1/4\",\"1/2\",\"1\\\"\"  ,\"2\\\"\"  ,\"4\\\"\"  ,\"8\\\"\"  ,\"15\\\"\",\"30\\\"\"}\n" +
-                    "    set currentShutter to shutter speed of cam\n" +
-                    "    set currentIdx to 1\n" +
-                    "    repeat with i from 1 to count of shutterList\n" +
-                    "        if item i of shutterList is currentShutter then\n" +
-                    "            set currentIdx to i\n" +
-                    "            exit repeat\n" +
-                    "        end if\n" +
-                    "    end repeat\n" +
-                    "    set newIdx to currentIdx \(op) \(steps)\n" +
-                    "    if newIdx < 1 then set newIdx to 1\n" +
-                    "    if newIdx > (count of shutterList) then set newIdx to count of shutterList\n" +
-                    "    set shutter speed of cam to item newIdx of shutterList\n" +
-                    "end tell"
-            }
+            guard case .absolute(let value) = mode else { return nil }
+            let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
+            return #"set shutter speed of camera of front document of application "Capture One" to "\#(escaped)""#
 
         case .autofocus:
             return #"set autofocusing of camera of front document of application "Capture One" to true"#
@@ -226,11 +168,14 @@ enum AppleScriptBridge {
     /// Returns nil for steps that don't have a read-back check.
     static func readBackScript(for step: SequenceStep) -> String? {
         switch step {
-        case .setISO:
+        case .setISO(let mode):
+            guard case .absolute = mode else { return nil }  // relative handles its own read-back
             return #"ISO of camera of front document of application "Capture One""#
-        case .setAperture:
+        case .setAperture(let mode):
+            guard case .absolute = mode else { return nil }
             return #"aperture of camera of front document of application "Capture One""#
-        case .setShutterSpeed:
+        case .setShutterSpeed(let mode):
+            guard case .absolute = mode else { return nil }
             return #"shutter speed of camera of front document of application "Capture One""#
         default:
             return nil
