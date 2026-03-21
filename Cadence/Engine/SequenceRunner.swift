@@ -11,6 +11,7 @@ final class SequenceRunner {
     var toastMessage: String?
 
     private var runTask: Task<Void, Never>?
+    private var toastTask: Task<Void, Never>?
 
     static func postStepDelay(for step: SequenceStep) -> TimeInterval {
         switch step {
@@ -76,6 +77,8 @@ final class SequenceRunner {
     func stop() {
         runTask?.cancel()
         runTask = nil
+        toastTask?.cancel()
+        toastTask = nil
         isRunning = false
         currentStepIndex = nil
         currentIteration = 0
@@ -220,10 +223,11 @@ final class SequenceRunner {
     }
 
     private func showToast(_ message: String) {
+        toastTask?.cancel()
         toastMessage = message
-        Task { @MainActor in
+        toastTask = Task {
             try? await Task.sleep(for: .seconds(4))
-            toastMessage = nil
+            if !Task.isCancelled { toastMessage = nil }
         }
     }
 
