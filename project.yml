@@ -1,0 +1,49 @@
+name: Cadence
+options:
+  bundleIdPrefix: com.cadence
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    PRODUCT_BUNDLE_IDENTIFIER: com.cadence.app
+    PRODUCT_NAME: Cadence
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: NO
+    INFOPLIST_KEY_NSAppleEventsUsageDescription: "Cadence needs to control Capture One to execute your automation sequences."
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+targets:
+  Cadence:
+    type: application
+    platform: macOS
+    sources:
+      - path: Cadence
+    info:
+      path: Cadence/Info.plist
+      properties:
+        CFBundleName: Cadence
+        CFBundleDisplayName: Cadence
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0"
+        NSAppleEventsUsageDescription: "Cadence needs to control Capture One to execute your automation sequences."
+        LSUIElement: false
+        NSPrincipalClass: NSApplication
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cadence.app
+
+  CadenceTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: CadenceTests
+    dependencies:
+      - target: Cadence
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cadence.tests
