@@ -246,6 +246,11 @@ struct StepCardView: View {
 
             case .relative(let dir, let steps):
                 HStack {
+                    Spacer()
+                    Stepper("\(steps) step\(steps == 1 ? "" : "s")", value: Binding(
+                        get: { steps },
+                        set: { makeStep(.relative(direction: dir, steps: max(1, min(18, $0)))) }
+                    ), in: 1...18)
                     Picker("Direction", selection: Binding(
                         get: { dir },
                         set: { makeStep(.relative(direction: $0, steps: steps)) }
@@ -254,12 +259,7 @@ struct StepCardView: View {
                         Text("Down").tag(RelativeDirection.down)
                     }
                     .pickerStyle(.segmented)
-                    .frame(maxWidth: 120)
-
-                    Stepper("\(steps) step\(steps == 1 ? "" : "s")", value: Binding(
-                        get: { steps },
-                        set: { makeStep(.relative(direction: dir, steps: max(1, min(18, $0)))) }
-                    ), in: 1...18)
+                    .frame(minWidth: 90)
                 }
             }
         }
