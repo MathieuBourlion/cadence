@@ -194,3 +194,106 @@ final class CadenceSequenceTests: XCTestCase {
         XCTAssertEqual(decoded.steps.count, original.steps.count)
     }
 }
+
+final class AppleScriptBridgeTests: XCTestCase {
+
+    // MARK: - scriptForStep
+
+    func test_capture_script() {
+        let script = AppleScriptBridge.scriptForStep(.capture(postCaptureDelay: 3))
+        XCTAssertEqual(script, #"tell application "Capture One" to capture"#)
+    }
+
+    func test_switchCamera_withName_script() {
+        let script = AppleScriptBridge.scriptForStep(.switchCamera(cameraName: "Canon EOS R5"))
+        XCTAssertEqual(script, #"tell application "Capture One" to select camera of front document name "Canon EOS R5""#)
+    }
+
+    func test_switchCamera_withoutName_returnsNil() {
+        let script = AppleScriptBridge.scriptForStep(.switchCamera(cameraName: nil))
+        XCTAssertNil(script)
+    }
+
+    func test_switchCamera_withQuoteInName_escapesCorrectly() {
+        let script = AppleScriptBridge.scriptForStep(.switchCamera(cameraName: #"Canon "R5""#))
+        XCTAssertNotNil(script)
+        XCTAssertTrue(script!.contains(#"\"R5\""#), "Quotes in camera name should be escaped")
+    }
+
+    func test_setISO_script() {
+        let script = AppleScriptBridge.scriptForStep(.setISO(value: "400"))
+        XCTAssertEqual(script, #"set ISO of camera of front document of application "Capture One" to "400""#)
+    }
+
+    func test_setAperture_script() {
+        let script = AppleScriptBridge.scriptForStep(.setAperture(value: "f/5.6"))
+        XCTAssertEqual(script, #"set aperture of camera of front document of application "Capture One" to "f/5.6""#)
+    }
+
+    func test_setShutterSpeed_withPlainValue_script() {
+        let script = AppleScriptBridge.scriptForStep(.setShutterSpeed(value: "1/125"))
+        XCTAssertEqual(script, #"set shutter speed of camera of front document of application "Capture One" to "1/125""#)
+    }
+
+    func test_setShutterSpeed_withLongExposure_escapesQuote() {
+        let script = AppleScriptBridge.scriptForStep(.setShutterSpeed(value: #"1""#))
+        XCTAssertNotNil(script)
+        XCTAssertTrue(script!.contains(#"\""#), "Quote in shutter speed value should be escaped")
+    }
+
+    func test_autofocus_script() {
+        let script = AppleScriptBridge.scriptForStep(.autofocus)
+        XCTAssertEqual(script, #"set autofocusing of camera of front document of application "Capture One" to true"#)
+    }
+
+    func test_moveFocus_script_nearerMedium() {
+        let script = AppleScriptBridge.scriptForStep(.moveFocus(direction: .nearer, amount: .medium))
+        XCTAssertEqual(script, #"tell application "Capture One" to adjust focus of camera of front document by amount -3 sync true"#)
+    }
+
+    func test_moveFocus_script_furtherLarge() {
+        let script = AppleScriptBridge.scriptForStep(.moveFocus(direction: .further, amount: .large))
+        XCTAssertEqual(script, #"tell application "Capture One" to adjust focus of camera of front document by amount 7 sync true"#)
+    }
+
+    func test_wait_returnsNilScript() {
+        let script = AppleScriptBridge.scriptForStep(.wait(seconds: 5))
+        XCTAssertNil(script)
+    }
+
+    // MARK: - moveFocusAmount
+
+    func test_moveFocusAmount_allCombinations() {
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .nearer, amount: .small), -1)
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .nearer, amount: .medium), -3)
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .nearer, amount: .large), -7)
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .further, amount: .small), 1)
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .further, amount: .medium), 3)
+        XCTAssertEqual(AppleScriptBridge.moveFocusAmount(direction: .further, amount: .large), 7)
+    }
+
+    // MARK: - readBackScript
+
+    func test_readBackScript_forISO() {
+        let script = AppleScriptBridge.readBackScript(for: .setISO(value: "400"))
+        XCTAssertEqual(script, #"ISO of camera of front document of application "Capture One""#)
+    }
+
+    func test_readBackScript_forAperture() {
+        let script = AppleScriptBridge.readBackScript(for: .setAperture(value: "f/5.6"))
+        XCTAssertEqual(script, #"aperture of camera of front document of application "Capture One""#)
+    }
+
+    func test_readBackScript_forShutterSpeed() {
+        let script = AppleScriptBridge.readBackScript(for: .setShutterSpeed(value: "1/125"))
+        XCTAssertEqual(script, #"shutter speed of camera of front document of application "Capture One""#)
+    }
+
+    func test_readBackScript_forCapture_isNil() {
+        XCTAssertNil(AppleScriptBridge.readBackScript(for: .capture(postCaptureDelay: 3)))
+    }
+
+    func test_readBackScript_forWait_isNil() {
+        XCTAssertNil(AppleScriptBridge.readBackScript(for: .wait(seconds: 5)))
+    }
+}
