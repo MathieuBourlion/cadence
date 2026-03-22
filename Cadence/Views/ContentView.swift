@@ -48,7 +48,7 @@ struct ContentView: View {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 14))
                         .frame(width: 22, height: 22)
-                        .offset(y: -1)
+                        .offset(y: -2)
                 }
                 .buttonStyle(.borderless)
                 .disabled(steps.isEmpty || runner.isRunning)
