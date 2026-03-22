@@ -305,6 +305,10 @@ final class SequenceRunner {
             return true
         }
 
+        // Small delay: C1 communicates the change to the camera asynchronously.
+        // Reading back immediately can return the old value before the camera confirms.
+        try? await Task.sleep(for: .seconds(0.4))
+
         // Read-back verification (normalize actual so "2.8" matches "f/2.8")
         let readResult = await executeStringOffMainThread { AppleScriptBridge.executeForString(readBackScript) }
         if case .success(let actual) = readResult, normalize(actual) != newValue {
@@ -317,6 +321,8 @@ final class SequenceRunner {
     private func verifyAbsoluteStep(_ step: SequenceStep) async {
         guard let readBackScript = AppleScriptBridge.readBackScript(for: step),
               let requestedVal = requestedValue(for: step) else { return }
+        // Small delay before reading back — C1 communicates changes to the camera asynchronously
+        try? await Task.sleep(for: .seconds(0.4))
         let result = await executeStringOffMainThread { AppleScriptBridge.executeForString(readBackScript) }
         if case .success(let actual) = result, actual != requestedVal {
             let settingName = step.typeName.replacingOccurrences(of: "Set ", with: "")
