@@ -12,17 +12,6 @@ A macOS utility that floats above Capture One and lets photographers build and r
 
 - macOS 14+
 - Capture One Pro (any current version)
-- Xcode 15+ (to build from source)
-
-## Building
-
-```bash
-brew install xcodegen
-xcodegen generate
-open Cadence.xcodeproj
-```
-
-Build and run from Xcode (Cmd+R).
 
 ## Usage
 
