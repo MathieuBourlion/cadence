@@ -92,20 +92,24 @@ enum AppleScriptBridge {
 
     // MARK: - Available value lists (fetched from connected camera)
 
-    // C1 returns these as pipe-delimited strings (e.g. "Auto|100|200|400"), not AppleScript lists.
+    // C1's properties record uses raw four-char codes, not human-readable names.
+    // Confirmed codes: «class CCAi» = available ISO settings,
+    //                  «class CCAp» = available aperture settings,
+    //                  «class CCAs» = available shutter speeds.
+    // Values are pipe-delimited strings, not AppleScript lists.
     static func fetchAvailableISO() -> Result<[String], AppleScriptError> {
-        executeForString(#"available ISO settings of camera of front document of application "Capture One""#)
+        executeForString("tell application \"Capture One\" to get \u{AB}class CCAi\u{BB} of camera of front document")
             .map { parsePipeDelimited($0, skipValues: ["Auto"]) }
     }
 
     static func fetchAvailableAperture() -> Result<[String], AppleScriptError> {
         // C1 returns numeric strings ("3.5", "8") — add "f/" prefix for display consistency
-        executeForString(#"available aperture settings of camera of front document of application "Capture One""#)
+        executeForString("tell application \"Capture One\" to get \u{AB}class CCAp\u{BB} of camera of front document")
             .map { parsePipeDelimited($0).map { "f/\($0)" } }
     }
 
     static func fetchAvailableShutterSpeed() -> Result<[String], AppleScriptError> {
-        executeForString(#"available shutter speeds of camera of front document of application "Capture One""#)
+        executeForString("tell application \"Capture One\" to get \u{AB}class CCAs\u{BB} of camera of front document")
             .map { parsePipeDelimited($0) }
     }
 
