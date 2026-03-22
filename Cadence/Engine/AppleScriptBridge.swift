@@ -90,6 +90,20 @@ enum AppleScriptBridge {
         executeForList(#"available camera identifiers of front document of application "Capture One""#)
     }
 
+    // MARK: - Available value lists (fetched from connected camera)
+
+    static func fetchAvailableISO() -> Result<[String], AppleScriptError> {
+        executeForList(#"tell application "Capture One" to get ISO values of camera of front document"#)
+    }
+
+    static func fetchAvailableAperture() -> Result<[String], AppleScriptError> {
+        executeForList(#"tell application "Capture One" to get aperture values of camera of front document"#)
+    }
+
+    static func fetchAvailableShutterSpeed() -> Result<[String], AppleScriptError> {
+        executeForList(#"tell application "Capture One" to get shutter speed values of camera of front document"#)
+    }
+
     // MARK: - Current value reads (for relative mode)
 
     static func fetchCurrentCamera() -> Result<String, AppleScriptError> {

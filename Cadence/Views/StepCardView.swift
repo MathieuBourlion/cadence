@@ -14,6 +14,8 @@ struct StepCardView: View {
     @State private var pulseOpacity: Double = 1.0
     @State private var cameraList: [String] = []
     @State private var cameraListError: String?
+    @State private var fetchedValues: [String]? = nil
+    @State private var isFetchingValues = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -241,6 +243,7 @@ struct StepCardView: View {
         defaultAbsolute: String,
         makeStep: @escaping (CameraValueMode) -> Void
     ) -> some View {
+        let displayValues = fetchedValues ?? values
         VStack(alignment: .leading, spacing: 8) {
             Picker("Mode", selection: Binding(
                 get: { if case .relative = mode { return "relative" } else { return "absolute" } },
@@ -248,7 +251,7 @@ struct StepCardView: View {
                     if newMode == "relative" {
                         makeStep(.relative(direction: .up, steps: 1))
                     } else {
-                        makeStep(.absolute(value: ""))
+                        makeStep(.absolute(value: displayValues.first ?? defaultAbsolute))
                     }
                 }
             )) {
@@ -260,19 +263,26 @@ struct StepCardView: View {
             switch mode {
             case .absolute(let value):
                 HStack {
-                    Text(label)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    TextField("e.g. \(defaultAbsolute)", text: Binding(
+                    Picker(label, selection: Binding(
                         get: { value },
                         set: { makeStep(.absolute(value: $0)) }
-                    ))
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 120)
+                    )) {
+                        ForEach(displayValues, id: \.self) { Text($0).tag($0) }
+                    }
+                    Button {
+                        Task { await fetchValuesForStep() }
+                    } label: {
+                        if isFetchingValues {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 11))
+                                .foregroundStyle(fetchedValues != nil ? Color.accentColor : .secondary)
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Fetch available values from connected camera")
                 }
-                Text("Type the exact value as it appears in Capture One.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
 
             case .relative(let dir, let steps):
                 HStack {
@@ -292,6 +302,23 @@ struct StepCardView: View {
                     .frame(minWidth: 90)
                 }
             }
+        }
+    }
+
+    private func fetchValuesForStep() async {
+        isFetchingValues = true
+        let currentStep = step
+        let result = await Task.detached(priority: .userInitiated) {
+            switch currentStep {
+            case .setISO:         return AppleScriptBridge.fetchAvailableISO()
+            case .setAperture:    return AppleScriptBridge.fetchAvailableAperture()
+            case .setShutterSpeed: return AppleScriptBridge.fetchAvailableShutterSpeed()
+            default:              return .success([String]())
+            }
+        }.value
+        isFetchingValues = false
+        if case .success(let values) = result, !values.isEmpty {
+            fetchedValues = values
         }
     }
 
