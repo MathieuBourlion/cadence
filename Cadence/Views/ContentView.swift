@@ -68,6 +68,20 @@ struct ContentView: View {
                         onLoad: loadPreset
                     )
                 }
+
+                Button(action: { Task { await runner.fetchAllValues() } }) {
+                    if runner.isFetchingAllValues {
+                        ProgressView().controlSize(.mini).frame(width: 22, height: 22)
+                    } else {
+                        Image(systemName: "camera")
+                            .font(.system(size: 14))
+                            .frame(width: 22, height: 22)
+                            .foregroundStyle(runner.fetchedISO.isEmpty ? .secondary : Color.accentColor)
+                    }
+                }
+                .buttonStyle(.borderless)
+                .disabled(runner.isRunning || runner.isFetchingAllValues)
+                .help("Load ISO, aperture, and shutter speed values from the connected camera")
                 } // HStack(spacing: 4)
             }
             .padding(.horizontal)
@@ -88,7 +102,10 @@ struct ContentView: View {
                             onMoveUp: { moveStep(item.id, by: -1) },
                             onMoveDown: { moveStep(item.id, by: 1) },
                             isFirst: index == 0,
-                            isLast: index == steps.count - 1
+                            isLast: index == steps.count - 1,
+                            globalFetchedISO: runner.fetchedISO,
+                            globalFetchedAperture: runner.fetchedAperture,
+                            globalFetchedShutterSpeed: runner.fetchedShutterSpeed
                         )
                         .disabled(runner.isRunning)
 

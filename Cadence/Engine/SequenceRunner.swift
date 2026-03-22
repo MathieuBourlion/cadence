@@ -9,6 +9,13 @@ final class SequenceRunner {
     var currentIteration: Int = 0
     var error: AppleScriptError?
     var toastMessage: String?
+    var isFetchingAllValues = false
+
+    // Cached available values fetched from the connected camera.
+    // Used by relative-mode steps so only real camera values are targeted.
+    var fetchedISO: [String] = []
+    var fetchedAperture: [String] = []   // stored with "f/" prefix to match static list format
+    var fetchedShutterSpeed: [String] = []
 
     private var runTask: Task<Void, Never>?
     private var toastTask: Task<Void, Never>?
@@ -44,6 +51,10 @@ final class SequenceRunner {
                 isRunning = false
                 return
             }
+
+            // Fetch available values from camera (needed for relative-mode steps)
+            await fetchAllValues(showFeedback: false)
+            if Task.isCancelled { isRunning = false; return }
 
             // Activate Capture One and clear any focused UI element before starting
             await executeOffMainThread {
@@ -89,6 +100,46 @@ final class SequenceRunner {
         isRunning = false
         currentStepIndex = nil
         currentIteration = 0
+    }
+
+    func fetchAllValues(showFeedback: Bool = true) async {
+        guard !isFetchingAllValues else { return }
+        isFetchingAllValues = true
+
+        let isoTask = Task.detached(priority: .userInitiated) { AppleScriptBridge.fetchAvailableISO() }
+        let apertureTask = Task.detached(priority: .userInitiated) { AppleScriptBridge.fetchAvailableAperture() }
+        let shutterTask = Task.detached(priority: .userInitiated) { AppleScriptBridge.fetchAvailableShutterSpeed() }
+
+        var loaded: [String] = []
+        var failed: [String] = []
+
+        if case .success(let values) = await isoTask.value, !values.isEmpty {
+            fetchedISO = values
+            loaded.append("ISO")
+        } else { failed.append("ISO") }
+
+        if case .success(let values) = await apertureTask.value, !values.isEmpty {
+            // Normalize to "f/" prefix to match static list format
+            fetchedAperture = values.map { $0.hasPrefix("f/") ? $0 : "f/\($0)" }
+            loaded.append("aperture")
+        } else { failed.append("aperture") }
+
+        if case .success(let values) = await shutterTask.value, !values.isEmpty {
+            fetchedShutterSpeed = values
+            loaded.append("shutter speed")
+        } else { failed.append("shutter speed") }
+
+        isFetchingAllValues = false
+
+        if showFeedback {
+            if failed.isEmpty {
+                showToast("Camera values loaded (\(loaded.joined(separator: ", ")))")
+            } else if loaded.isEmpty {
+                showToast("Could not load camera values — is Capture One running with a connected camera?")
+            } else {
+                showToast("Loaded: \(loaded.joined(separator: ", ")). Failed: \(failed.joined(separator: ", "))")
+            }
+        }
     }
 
     // MARK: - Step execution
@@ -174,9 +225,10 @@ final class SequenceRunner {
         switch step {
         case .setISO(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
+            let isoList = fetchedISO.isEmpty ? SequenceStep.isoValues : fetchedISO
             return await executeRelative(
                 fetch: AppleScriptBridge.fetchCurrentISO,
-                list: SequenceStep.isoValues,
+                list: isoList,
                 direction: dir, steps: steps, settingName: "ISO",
                 normalize: { $0 },
                 readBackScript: #"tell application "Capture One" to get ISO of camera of front document"#,
@@ -184,11 +236,13 @@ final class SequenceRunner {
             )
         case .setAperture(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
+            // fetchedAperture is normalized to "f/" prefix; static list also uses "f/" prefix
+            let apertureList = fetchedAperture.isEmpty ? SequenceStep.apertureValues : fetchedAperture
             return await executeRelative(
                 fetch: AppleScriptBridge.fetchCurrentAperture,
-                list: SequenceStep.apertureValues,
+                list: apertureList,
                 direction: dir, steps: steps, settingName: "aperture",
-                normalize: { "f/\($0)" },  // C1 returns "2.8"; list uses "f/2.8"
+                normalize: { $0.hasPrefix("f/") ? $0 : "f/\($0)" },
                 readBackScript: #"tell application "Capture One" to get aperture of camera of front document"#,
                 setScript: { value in
                     let v = value.hasPrefix("f/") ? String(value.dropFirst(2)) : value
@@ -197,9 +251,10 @@ final class SequenceRunner {
             )
         case .setShutterSpeed(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
+            let shutterList = fetchedShutterSpeed.isEmpty ? SequenceStep.shutterSpeedValues : fetchedShutterSpeed
             return await executeRelative(
                 fetch: AppleScriptBridge.fetchCurrentShutterSpeed,
-                list: SequenceStep.shutterSpeedValues,
+                list: shutterList,
                 direction: dir, steps: steps, settingName: "shutter speed",
                 normalize: { $0 },
                 readBackScript: #"tell application "Capture One" to get shutter speed of camera of front document"#,
@@ -239,15 +294,17 @@ final class SequenceRunner {
         let newValue = list[newIndex]
 
         let result = await executeOffMainThread { AppleScriptBridge.execute(setScript(newValue)) }
-        if case .failure(let scriptError) = result {
-            error = scriptError
-            return false
+        if case .failure = result {
+            // Value may not exist on this camera; show toast and continue
+            showToast("Could not set \(settingName) to \(newValue) — not available on this camera.")
+            return true
         }
 
-        // Read-back verification
+        // Read-back verification (normalize actual so "2.8" matches "f/2.8")
         let readResult = await executeStringOffMainThread { AppleScriptBridge.executeForString(readBackScript) }
-        if case .success(let actual) = readResult, actual != newValue {
-            showToast("Could not set \(settingName) to \(newValue). Camera is using \(actual).")
+        if case .success(let actual) = readResult, normalize(actual) != newValue {
+            let displayActual = normalize(actual)
+            showToast("Could not set \(settingName) to \(newValue). Camera is using \(displayActual).")
         }
         return true
     }

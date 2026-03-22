@@ -10,6 +10,9 @@ struct StepCardView: View {
     let onMoveDown: () -> Void
     let isFirst: Bool
     let isLast: Bool
+    var globalFetchedISO: [String] = []
+    var globalFetchedAperture: [String] = []
+    var globalFetchedShutterSpeed: [String] = []
 
     @State private var pulseOpacity: Double = 1.0
     @State private var cameraList: [String] = []
@@ -138,6 +141,7 @@ struct StepCardView: View {
                 mode: mode,
                 label: "ISO",
                 values: SequenceStep.isoValues,
+                globalValues: globalFetchedISO,
                 defaultAbsolute: "400",
                 makeStep: { step = .setISO(mode: $0) }
             )
@@ -147,6 +151,7 @@ struct StepCardView: View {
                 mode: mode,
                 label: "Aperture",
                 values: SequenceStep.apertureValues,
+                globalValues: globalFetchedAperture,
                 defaultAbsolute: "f/5.6",
                 makeStep: { step = .setAperture(mode: $0) }
             )
@@ -156,6 +161,7 @@ struct StepCardView: View {
                 mode: mode,
                 label: "Shutter Speed",
                 values: SequenceStep.shutterSpeedValues,
+                globalValues: globalFetchedShutterSpeed,
                 defaultAbsolute: "1/125",
                 makeStep: { step = .setShutterSpeed(mode: $0) }
             )
@@ -241,10 +247,12 @@ struct StepCardView: View {
         mode: CameraValueMode,
         label: String,
         values: [String],
+        globalValues: [String],
         defaultAbsolute: String,
         makeStep: @escaping (CameraValueMode) -> Void
     ) -> some View {
-        let displayValues = fetchedValues ?? values
+        // Priority: per-step fetch > global fetch > static fallback
+        let displayValues = fetchedValues ?? (globalValues.isEmpty ? values : globalValues)
         VStack(alignment: .leading, spacing: 8) {
             Picker("Mode", selection: Binding(
                 get: { if case .relative = mode { return "relative" } else { return "absolute" } },
