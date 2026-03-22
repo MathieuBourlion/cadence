@@ -161,11 +161,16 @@ enum SequenceStep: Codable, Equatable {
     // MARK: - Validation
 
     var isComplete: Bool {
-        if case .switchCamera(let mode) = self,
-           case .specific(let name) = mode {
-            return name != nil
+        switch self {
+        case .switchCamera(let mode):
+            if case .specific(let name) = mode { return name != nil }
+            return true
+        case .setISO(let mode), .setAperture(let mode), .setShutterSpeed(let mode):
+            if case .absolute(let value) = mode { return !value.isEmpty }
+            return true
+        default:
+            return true
         }
-        return true
     }
 
     // MARK: - Display

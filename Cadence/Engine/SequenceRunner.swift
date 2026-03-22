@@ -16,7 +16,7 @@ final class SequenceRunner {
     static func postStepDelay(for step: SequenceStep) -> TimeInterval {
         switch step {
         case .capture(let delay): return TimeInterval(max(delay, 3))
-        case .autofocus:          return 1.0
+        case .autofocus:          return 0.0  // delay handled inside executeAutofocus
         case .moveFocus:          return 0.8
         case .wait(let seconds):  return TimeInterval(seconds)
         default:                  return 0.0
@@ -87,6 +87,11 @@ final class SequenceRunner {
     // MARK: - Step execution
 
     private func executeStep(_ step: SequenceStep) async -> Bool {
+        // Autofocus: trigger, wait 1s, then revert
+        if case .autofocus = step {
+            return await executeAutofocus()
+        }
+
         // Next camera: special read-then-select path
         if case .switchCamera(let mode) = step, case .next = mode {
             return await executeNextCamera()
@@ -107,6 +112,23 @@ final class SequenceRunner {
             return false
         }
         await verifyAbsoluteStep(step)
+        return true
+    }
+
+    private func executeAutofocus() async -> Bool {
+        let triggerScript = #"tell application "Capture One" to set autofocusing of camera of front document to true"#
+        let result = await executeOffMainThread { AppleScriptBridge.execute(triggerScript) }
+        if case .failure(let scriptError) = result {
+            error = scriptError
+            return false
+        }
+        do {
+            try await Task.sleep(for: .seconds(1))
+        } catch {
+            return false
+        }
+        let revertScript = #"tell application "Capture One" to set autofocusing of camera of front document to false"#
+        await executeOffMainThread { AppleScriptBridge.execute(revertScript) }
         return true
     }
 

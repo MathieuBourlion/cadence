@@ -6,6 +6,10 @@ struct StepCardView: View {
     let executionState: StepExecutionState
     let onTap: () -> Void
     let onRemove: () -> Void
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
+    let isFirst: Bool
+    let isLast: Bool
 
     @State private var pulseOpacity: Double = 1.0
     @State private var cameraList: [String] = []
@@ -34,11 +38,29 @@ struct StepCardView: View {
 
                     Spacer()
 
-                    Button(action: onRemove) {
-                        Image(systemName: "xmark")
-                            .foregroundStyle(.secondary)
+                    HStack(spacing: 2) {
+                        Button(action: onMoveUp) {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 11))
+                                .foregroundStyle(isFirst ? .tertiary : .secondary)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(isFirst)
+
+                        Button(action: onMoveDown) {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11))
+                                .foregroundStyle(isLast ? .tertiary : .secondary)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(isLast)
+
+                        Button(action: onRemove) {
+                            Image(systemName: "xmark")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.borderless)
                     }
-                    .buttonStyle(.borderless)
                 }
             }
             .buttonStyle(.plain)
@@ -226,7 +248,7 @@ struct StepCardView: View {
                     if newMode == "relative" {
                         makeStep(.relative(direction: .up, steps: 1))
                     } else {
-                        makeStep(.absolute(value: defaultAbsolute))
+                        makeStep(.absolute(value: ""))
                     }
                 }
             )) {
@@ -237,12 +259,20 @@ struct StepCardView: View {
 
             switch mode {
             case .absolute(let value):
-                Picker(label, selection: Binding(
-                    get: { value },
-                    set: { makeStep(.absolute(value: $0)) }
-                )) {
-                    ForEach(values, id: \.self) { Text($0).tag($0) }
+                HStack {
+                    Text(label)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    TextField("e.g. \(defaultAbsolute)", text: Binding(
+                        get: { value },
+                        set: { makeStep(.absolute(value: $0)) }
+                    ))
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 120)
                 }
+                Text("Type the exact value as it appears in Capture One.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
             case .relative(let dir, let steps):
                 HStack {

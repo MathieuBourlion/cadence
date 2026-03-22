@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var steps: [IdentifiableStep] = []
     @State private var expandedStepID: UUID?
     @State private var showAddStepPopover = false
+    @State private var insertAfterIndex: Int? = nil
     @State private var showPresetsPopover = false
     @State private var showSavePresetSheet = false
     @State private var showResetConfirmation = false
@@ -83,12 +84,27 @@ struct ContentView: View {
                             isExpanded: expandedStepID == item.id,
                             executionState: executionState(for: index),
                             onTap: { toggleExpanded(item.id) },
-                            onRemove: { removeStep(item.id) }
+                            onRemove: { removeStep(item.id) },
+                            onMoveUp: { moveStep(item.id, by: -1) },
+                            onMoveDown: { moveStep(item.id, by: 1) },
+                            isFirst: index == 0,
+                            isLast: index == steps.count - 1
                         )
                         .disabled(runner.isRunning)
 
                         if index < steps.count - 1 {
-                            StepConnectorView()
+                            StepConnectorView(onInsert: {
+                                insertAfterIndex = index
+                            })
+                            .popover(isPresented: Binding(
+                                get: { insertAfterIndex == index },
+                                set: { if !$0 { insertAfterIndex = nil } }
+                            )) {
+                                AddStepPopover { step in
+                                    insertStep(step, after: index)
+                                }
+                            }
+                            .disabled(runner.isRunning)
                         }
                     }
 
@@ -204,6 +220,20 @@ struct ContentView: View {
         steps.append(item)
         expandedStepID = item.id
         showAddStepPopover = false
+    }
+
+    private func insertStep(_ step: SequenceStep, after index: Int) {
+        let item = IdentifiableStep(step: step)
+        steps.insert(item, at: index + 1)
+        expandedStepID = item.id
+        insertAfterIndex = nil
+    }
+
+    private func moveStep(_ id: UUID, by delta: Int) {
+        guard let index = steps.firstIndex(where: { $0.id == id }) else { return }
+        let newIndex = index + delta
+        guard newIndex >= 0, newIndex < steps.count else { return }
+        steps.move(fromOffsets: IndexSet(integer: index), toOffset: delta > 0 ? newIndex + 1 : newIndex)
     }
 
     private func loadPreset(_ sequence: CadenceSequence) {
