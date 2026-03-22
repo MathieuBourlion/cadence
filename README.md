@@ -11,7 +11,7 @@ A macOS utility that floats above Capture One and lets photographers build and r
 ## Requirements
 
 - macOS 14+
-- Capture One Pro (any current version)
+- Capture One (any current version)
 
 ## Usage
 
