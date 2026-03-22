@@ -139,16 +139,16 @@ enum AppleScriptBridge {
 
         case .setISO(let mode):
             guard case .absolute(let value) = mode else { return nil }
-            return #"set ISO of camera of front document of application "Capture One" to "\#(value)""#
+            return #"tell application "Capture One" to set ISO of camera of front document to "\#(value)""#
 
         case .setAperture(let mode):
             guard case .absolute(let value) = mode else { return nil }
-            return #"set aperture of camera of front document of application "Capture One" to "\#(value)""#
+            return #"tell application "Capture One" to set aperture of camera of front document to "\#(value)""#
 
         case .setShutterSpeed(let mode):
             guard case .absolute(let value) = mode else { return nil }
             let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
-            return #"set shutter speed of camera of front document of application "Capture One" to "\#(escaped)""#
+            return #"tell application "Capture One" to set shutter speed of camera of front document to "\#(escaped)""#
 
         case .autofocus:
             return #"tell application "Capture One" to set autofocusing of camera of front document to true"#

@@ -150,7 +150,7 @@ final class SequenceRunner {
                 list: SequenceStep.isoValues,
                 direction: dir, steps: steps, settingName: "ISO",
                 readBackScript: #"ISO of camera of front document of application "Capture One""#,
-                setScript: { #"set ISO of camera of front document of application "Capture One" to "\#($0)""# }
+                setScript: { #"tell application "Capture One" to set ISO of camera of front document to "\#($0)""# }
             )
         case .setAperture(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
@@ -159,7 +159,7 @@ final class SequenceRunner {
                 list: SequenceStep.apertureValues,
                 direction: dir, steps: steps, settingName: "aperture",
                 readBackScript: #"aperture of camera of front document of application "Capture One""#,
-                setScript: { #"set aperture of camera of front document of application "Capture One" to "\#($0)""# }
+                setScript: { #"tell application "Capture One" to set aperture of camera of front document to "\#($0)""# }
             )
         case .setShutterSpeed(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
@@ -170,7 +170,7 @@ final class SequenceRunner {
                 readBackScript: #"shutter speed of camera of front document of application "Capture One""#,
                 setScript: { value in
                     let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
-                    return #"set shutter speed of camera of front document of application "Capture One" to "\#(escaped)""#
+                    return #"tell application "Capture One" to set shutter speed of camera of front document to "\#(escaped)""#
                 }
             )
         default:
