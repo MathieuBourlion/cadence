@@ -29,8 +29,17 @@ jobs:
             -configuration Release \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_ALLOWED=YES \
             -derivedDataPath build
+
+      - name: Ad-hoc sign app
+        run: |
+          codesign --force --deep --sign - build/Build/Products/Release/Cadence.app
+
+      - name: Stage app for DMG
+        run: |
+          mkdir -p dmg-staging
+          cp -R build/Build/Products/Release/Cadence.app dmg-staging/
 
       - name: Create DMG
         run: |
@@ -43,7 +52,7 @@ jobs:
             --hide-extension "Cadence.app" \
             --app-drop-link 450 185 \
             "Cadence-${{ github.ref_name }}.dmg" \
-            "build/Build/Products/Release/"
+            dmg-staging/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
