@@ -45,6 +45,13 @@ final class SequenceRunner {
                 return
             }
 
+            // Activate Capture One and clear any focused UI element before starting
+            await executeOffMainThread {
+                AppleScriptBridge.execute(#"tell application "Capture One" to activate"#)
+            }
+            try? await Task.sleep(for: .seconds(0.5))
+            if Task.isCancelled { isRunning = false; return }
+
             let total = max(1, repeatCount)
             outer: for iteration in 1...total {
                 if Task.isCancelled { break }
