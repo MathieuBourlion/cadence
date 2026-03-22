@@ -43,14 +43,19 @@ struct ContentView: View {
                     .font(.headline)
                     .fontWeight(.medium)
                 Spacer()
+                HStack(spacing: 4) {
                 Button(action: { showSavePresetSheet = true }) {
                     Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 14))
+                        .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.borderless)
                 .disabled(steps.isEmpty || runner.isRunning)
 
                 Button(action: { showPresetsPopover = true }) {
                     Image(systemName: "list.bullet")
+                        .font(.system(size: 14))
+                        .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.borderless)
                 .disabled(runner.isRunning)
@@ -61,6 +66,7 @@ struct ContentView: View {
                         onLoad: loadPreset
                     )
                 }
+                } // HStack(spacing: 4)
             }
             .padding(.horizontal)
             .padding(.vertical, 10)

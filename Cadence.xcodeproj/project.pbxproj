@@ -8,12 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		050D212CFCF5D8A65AC6DDD0 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DDFF33667C9061C61E9AB4 /* FloatingPanel.swift */; };
+		06D84E08B3BD6B65C031E124 /* StepConnectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B93FD53F32A078FADF7B68E /* StepConnectorView.swift */; };
 		07BF57C2F7EB38AA8C1C5FD6 /* SavePresetSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B009E89F8680975B1BDFEC4 /* SavePresetSheet.swift */; };
 		147CAF199ECE7AE9CA77BE23 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED22155E1B2A67014FFFB9FE /* ToastView.swift */; };
 		1CBCF49235138427F6B7F392 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E947B22D92237B927C9DE0E /* ContentView.swift */; };
+		2091699AB40049F218EEC931 /* CadenceIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762CAD193F619175257ADAB4 /* CadenceIcon.swift */; };
 		28E458EF554469DF6A804BC5 /* CadenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9880DDA2B852F0ED7E7ECC0F /* CadenceTests.swift */; };
 		33F7AAAF7DE70D0370CCA739 /* CadenceSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA91BD350E6D4ABEB8CEEF8D /* CadenceSequence.swift */; };
 		43A6653D967FC59ABC91624E /* CadenceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD2468FAE7A89F2B18DEDAF /* CadenceApp.swift */; };
+		8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 40FEC6F1B63663537E6E73B3 /* Assets.xcassets */; };
 		83E6155FF4066CF5D93DFB68 /* ControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78437426E26F42151E2A8AA /* ControlBar.swift */; };
 		A3432CB5EAD9A7133A3B3117 /* AppleScriptBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42F69F8AA8D92EE731916B3 /* AppleScriptBridge.swift */; };
 		A5807F0577ACD949973B9DB5 /* SequenceRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7412F2810569F05A2643D754 /* SequenceRunner.swift */; };
@@ -22,7 +25,6 @@
 		DC18D2B7D12DB2C1A191425A /* StepCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */; };
 		E2C4065E3EFDA0E2ECEC38CC /* PresetsPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAD84C73B943348824970F9 /* PresetsPopover.swift */; };
 		F93450FCB18D8D9DBA669482 /* SequenceStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C889B0073D1E4837A2F58A8 /* SequenceStep.swift */; };
-		AA11BB22CC33DD44EE55FF66 /* StepConnectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,8 +41,11 @@
 		0E947B22D92237B927C9DE0E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2747B5C0BD75EFECA1D2569B /* Cadence.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cadence.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2C889B0073D1E4837A2F58A8 /* SequenceStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SequenceStep.swift; sourceTree = "<group>"; };
+		40FEC6F1B63663537E6E73B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4B93FD53F32A078FADF7B68E /* StepConnectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepConnectorView.swift; sourceTree = "<group>"; };
 		53DC5566E2688823A894040D /* CadenceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CadenceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7412F2810569F05A2643D754 /* SequenceRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SequenceRunner.swift; sourceTree = "<group>"; };
+		762CAD193F619175257ADAB4 /* CadenceIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CadenceIcon.swift; sourceTree = "<group>"; };
 		8B009E89F8680975B1BDFEC4 /* SavePresetSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavePresetSheet.swift; sourceTree = "<group>"; };
 		918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepCardView.swift; sourceTree = "<group>"; };
 		96DF2728AEBE9F989DEFC496 /* PresetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManager.swift; sourceTree = "<group>"; };
@@ -54,7 +59,6 @@
 		ED22155E1B2A67014FFFB9FE /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		F2DDFF33667C9061C61E9AB4 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		F4030E71F6413A0E5E17D560 /* AddStepPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddStepPopover.swift; sourceTree = "<group>"; };
-		BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepConnectorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -123,12 +127,13 @@
 			isa = PBXGroup;
 			children = (
 				F4030E71F6413A0E5E17D560 /* AddStepPopover.swift */,
+				762CAD193F619175257ADAB4 /* CadenceIcon.swift */,
 				0E947B22D92237B927C9DE0E /* ContentView.swift */,
 				E78437426E26F42151E2A8AA /* ControlBar.swift */,
 				DFAD84C73B943348824970F9 /* PresetsPopover.swift */,
 				8B009E89F8680975B1BDFEC4 /* SavePresetSheet.swift */,
 				918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */,
-				BB22CC33DD44EE55FF6600AA /* StepConnectorView.swift */,
+				4B93FD53F32A078FADF7B68E /* StepConnectorView.swift */,
 				ED22155E1B2A67014FFFB9FE /* ToastView.swift */,
 			);
 			path = Views;
@@ -137,6 +142,7 @@
 		FD48710B608BE6A57DA448D7 /* Cadence */ = {
 			isa = PBXGroup;
 			children = (
+				40FEC6F1B63663537E6E73B3 /* Assets.xcassets */,
 				C7C2C883C88ABF623FF04084 /* Info.plist */,
 				78D2D1E4520BA69AC30BB1CB /* App */,
 				4EFF340EA58AD423BE829412 /* Engine */,
@@ -155,6 +161,7 @@
 			buildConfigurationList = 07126B28B5B904C139BBD128 /* Build configuration list for PBXNativeTarget "Cadence" */;
 			buildPhases = (
 				1F5350DE3B53E65CAAF89D1D /* Sources */,
+				BFA5A0EE784FE6F59E5E0293 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -224,6 +231,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		BFA5A0EE784FE6F59E5E0293 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		1F5350DE3B53E65CAAF89D1D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -232,6 +250,7 @@
 				B2D2E43749315E70A640041B /* AddStepPopover.swift in Sources */,
 				A3432CB5EAD9A7133A3B3117 /* AppleScriptBridge.swift in Sources */,
 				43A6653D967FC59ABC91624E /* CadenceApp.swift in Sources */,
+				2091699AB40049F218EEC931 /* CadenceIcon.swift in Sources */,
 				33F7AAAF7DE70D0370CCA739 /* CadenceSequence.swift in Sources */,
 				1CBCF49235138427F6B7F392 /* ContentView.swift in Sources */,
 				83E6155FF4066CF5D93DFB68 /* ControlBar.swift in Sources */,
@@ -242,7 +261,7 @@
 				A5807F0577ACD949973B9DB5 /* SequenceRunner.swift in Sources */,
 				F93450FCB18D8D9DBA669482 /* SequenceStep.swift in Sources */,
 				DC18D2B7D12DB2C1A191425A /* StepCardView.swift in Sources */,
-				AA11BB22CC33DD44EE55FF66 /* StepConnectorView.swift in Sources */,
+				06D84E08B3BD6B65C031E124 /* StepConnectorView.swift in Sources */,
 				147CAF199ECE7AE9CA77BE23 /* ToastView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -300,6 +319,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -363,16 +383,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGNING_ALLOWED = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadence.tests;
-				PRODUCT_NAME = CadenceTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cadence.app/Contents/MacOS/Cadence";
 			};
@@ -382,6 +399,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -452,16 +470,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGNING_ALLOWED = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadence.tests;
-				PRODUCT_NAME = CadenceTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cadence.app/Contents/MacOS/Cadence";
 			};

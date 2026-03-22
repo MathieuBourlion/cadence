@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: brew install xcodegen create-dmg
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build Release
+        run: |
+          xcodebuild build \
+            -scheme Cadence \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath build
+
+      - name: Create DMG
+        run: |
+          create-dmg \
+            --volname "Cadence" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "Cadence.app" 150 185 \
+            --hide-extension "Cadence.app" \
+            --app-drop-link 450 185 \
+            "Cadence-${{ github.ref_name }}.dmg" \
+            "build/Build/Products/Release/"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "Cadence-${{ github.ref_name }}.dmg"
+          body: |
+            ## Download
+
+            1. Download `Cadence-${{ github.ref_name }}.dmg` below
+            2. Open the DMG and drag **Cadence** to your Applications folder
+            3. **First launch:** right-click Cadence → **Open** → **Open** to bypass macOS's security check for unsigned apps
+
+            ## Requirements
+
+            - macOS 14 or later
+            - Capture One Pro (any current version)

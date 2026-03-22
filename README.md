@@ -2,6 +2,12 @@
 
 A macOS utility that floats above Capture One and lets photographers build and run automated camera control sequences via AppleScript.
 
+## Download
+
+1. Go to [Releases](../../releases) and download the latest `Cadence-vX.X.X.dmg`
+2. Open the DMG and drag **Cadence** to your Applications folder
+3. **First launch:** right-click Cadence → **Open** → **Open** to bypass macOS's security check for unsigned apps
+
 ## Requirements
 
 - macOS 14+
