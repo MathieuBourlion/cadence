@@ -157,7 +157,8 @@ enum AppleScriptBridge {
 
         case .setAperture(let mode):
             guard case .absolute(let value) = mode else { return nil }
-            return #"tell application "Capture One" to set aperture of camera of front document to "\#(value)""#
+            let numericAperture = value.hasPrefix("f/") ? String(value.dropFirst(2)) : value
+            return #"tell application "Capture One" to set aperture of camera of front document to "\#(numericAperture)""#
 
         case .setShutterSpeed(let mode):
             guard case .absolute(let value) = mode else { return nil }

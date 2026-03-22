@@ -188,7 +188,10 @@ final class SequenceRunner {
                 list: SequenceStep.apertureValues,
                 direction: dir, steps: steps, settingName: "aperture",
                 readBackScript: #"aperture of camera of front document of application "Capture One""#,
-                setScript: { #"tell application "Capture One" to set aperture of camera of front document to "\#($0)""# }
+                setScript: { value in
+                    let v = value.hasPrefix("f/") ? String(value.dropFirst(2)) : value
+                    return #"tell application "Capture One" to set aperture of camera of front document to "\#(v)""#
+                }
             )
         case .setShutterSpeed(let mode):
             guard case .relative(let dir, let steps) = mode else { return nil }
@@ -266,7 +269,9 @@ final class SequenceRunner {
             if case .absolute(let value) = mode { return value }
             return nil
         case .setAperture(let mode):
-            if case .absolute(let value) = mode { return value }
+            if case .absolute(let value) = mode {
+                return value.hasPrefix("f/") ? String(value.dropFirst(2)) : value
+            }
             return nil
         case .setShutterSpeed(let mode):
             if case .absolute(let value) = mode { return value }

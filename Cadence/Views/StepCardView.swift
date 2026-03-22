@@ -16,6 +16,7 @@ struct StepCardView: View {
     @State private var cameraListError: String?
     @State private var fetchedValues: [String]? = nil
     @State private var isFetchingValues = false
+    @State private var fetchMessage: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -273,7 +274,7 @@ struct StepCardView: View {
                         Task { await fetchValuesForStep() }
                     } label: {
                         if isFetchingValues {
-                            ProgressView().controlSize(.mini)
+                            ProgressView().controlSize(.mini).frame(width: 14)
                         } else {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 11))
@@ -281,7 +282,13 @@ struct StepCardView: View {
                         }
                     }
                     .buttonStyle(.borderless)
+                    .disabled(isFetchingValues)
                     .help("Fetch available values from connected camera")
+                }
+                if let msg = fetchMessage {
+                    Text(msg)
+                        .font(.caption)
+                        .foregroundStyle(fetchedValues != nil ? Color.accentColor : .red)
                 }
 
             case .relative(let dir, let steps):
@@ -307,18 +314,25 @@ struct StepCardView: View {
 
     private func fetchValuesForStep() async {
         isFetchingValues = true
+        fetchMessage = nil
         let currentStep = step
         let result = await Task.detached(priority: .userInitiated) {
             switch currentStep {
-            case .setISO:         return AppleScriptBridge.fetchAvailableISO()
-            case .setAperture:    return AppleScriptBridge.fetchAvailableAperture()
+            case .setISO:          return AppleScriptBridge.fetchAvailableISO()
+            case .setAperture:     return AppleScriptBridge.fetchAvailableAperture()
             case .setShutterSpeed: return AppleScriptBridge.fetchAvailableShutterSpeed()
-            default:              return .success([String]())
+            default:               return .success([String]())
             }
         }.value
         isFetchingValues = false
-        if case .success(let values) = result, !values.isEmpty {
+        switch result {
+        case .success(let values) where !values.isEmpty:
             fetchedValues = values
+            fetchMessage = "\(values.count) values loaded from camera"
+        case .success:
+            fetchMessage = "No values returned — camera may not support this"
+        case .failure(let err):
+            fetchMessage = "Failed: \(err.message)"
         }
     }
 
