@@ -14,6 +14,7 @@
 		1CBCF49235138427F6B7F392 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E947B22D92237B927C9DE0E /* ContentView.swift */; };
 		2091699AB40049F218EEC931 /* CadenceIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762CAD193F619175257ADAB4 /* CadenceIcon.swift */; };
 		28E458EF554469DF6A804BC5 /* CadenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9880DDA2B852F0ED7E7ECC0F /* CadenceTests.swift */; };
+		2F4E492E4F64B18FB751F940 /* ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86911E51A123EEECA5377195 /* ViewExtensions.swift */; };
 		33F7AAAF7DE70D0370CCA739 /* CadenceSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA91BD350E6D4ABEB8CEEF8D /* CadenceSequence.swift */; };
 		43A6653D967FC59ABC91624E /* CadenceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD2468FAE7A89F2B18DEDAF /* CadenceApp.swift */; };
 		8006F55E629A70E7ED335961 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 40FEC6F1B63663537E6E73B3 /* Assets.xcassets */; };
@@ -46,6 +47,7 @@
 		53DC5566E2688823A894040D /* CadenceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CadenceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7412F2810569F05A2643D754 /* SequenceRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SequenceRunner.swift; sourceTree = "<group>"; };
 		762CAD193F619175257ADAB4 /* CadenceIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CadenceIcon.swift; sourceTree = "<group>"; };
+		86911E51A123EEECA5377195 /* ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtensions.swift; sourceTree = "<group>"; };
 		8B009E89F8680975B1BDFEC4 /* SavePresetSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavePresetSheet.swift; sourceTree = "<group>"; };
 		918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepCardView.swift; sourceTree = "<group>"; };
 		96DF2728AEBE9F989DEFC496 /* PresetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManager.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				918BE841B0CEC4FBFC09E6E1 /* StepCardView.swift */,
 				4B93FD53F32A078FADF7B68E /* StepConnectorView.swift */,
 				ED22155E1B2A67014FFFB9FE /* ToastView.swift */,
+				86911E51A123EEECA5377195 /* ViewExtensions.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -263,6 +266,7 @@
 				DC18D2B7D12DB2C1A191425A /* StepCardView.swift in Sources */,
 				06D84E08B3BD6B65C031E124 /* StepConnectorView.swift in Sources */,
 				147CAF199ECE7AE9CA77BE23 /* ToastView.swift in Sources */,
+				2F4E492E4F64B18FB751F940 /* ViewExtensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

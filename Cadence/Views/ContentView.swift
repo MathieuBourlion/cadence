@@ -44,14 +44,14 @@ struct ContentView: View {
             HStack {
                 Button(action: { Task { await runner.fetchAllValues() } }) {
                     if runner.isFetchingAllValues {
-                        ProgressView().controlSize(.mini).frame(width: 22, height: 22)
+                        ProgressView().controlSize(.mini)
                     } else {
-                        Image(systemName: "camera")
-                            .font(.system(size: 14))
-                            .frame(width: 22, height: 22)
+                        Text("Fetch camera values")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.primary)
                     }
                 }
-                .buttonStyle(.borderless)
+                .adaptiveToolbarButtonStyle()
                 .disabled(runner.isRunning || runner.isFetchingAllValues)
                 .help("Load ISO, aperture, and shutter speed values from the connected camera")
 
@@ -62,16 +62,18 @@ struct ContentView: View {
                         .font(.system(size: 14))
                         .frame(width: 22, height: 22)
                         .offset(y: -2)
+                        .foregroundStyle(.primary)
                 }
-                .buttonStyle(.borderless)
+                .adaptiveToolbarButtonStyle()
                 .disabled(steps.isEmpty || runner.isRunning)
 
                 Button(action: { showPresetsPopover = true }) {
                     Image(systemName: "list.bullet")
                         .font(.system(size: 14))
                         .frame(width: 22, height: 22)
+                        .foregroundStyle(.primary)
                 }
-                .buttonStyle(.borderless)
+                .adaptiveToolbarButtonStyle()
                 .disabled(runner.isRunning)
                 .popover(isPresented: $showPresetsPopover) {
                     PresetsPopover(
@@ -271,3 +273,4 @@ struct ContentView: View {
         showPresetsPopover = false
     }
 }
+

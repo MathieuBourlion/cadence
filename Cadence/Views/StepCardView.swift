@@ -44,7 +44,7 @@ struct StepCardView: View {
                         if firstIterationOnly {
                             Text("First pass only")
                                 .font(.caption2)
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(.secondary)
                         }
                     }
 
@@ -54,9 +54,9 @@ struct StepCardView: View {
                         Button(action: { firstIterationOnly.toggle() }) {
                             Image(systemName: firstIterationOnly ? "1.circle.fill" : "1.circle")
                                 .font(.system(size: 13))
-                                .foregroundStyle(firstIterationOnly ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
+                                .foregroundStyle(firstIterationOnly ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.plain)
                         .help("First pass only — this step runs once and is skipped on repeat iterations")
 
                         Button(action: onMoveUp) {
@@ -64,7 +64,7 @@ struct StepCardView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(isFirst ? .tertiary : .secondary)
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.plain)
                         .disabled(isFirst)
 
                         Button(action: onMoveDown) {
@@ -72,14 +72,14 @@ struct StepCardView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(isLast ? .tertiary : .secondary)
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.plain)
                         .disabled(isLast)
 
                         Button(action: onRemove) {
                             Image(systemName: "xmark")
                                 .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -300,17 +300,17 @@ struct StepCardView: View {
                         } else {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 11))
-                                .foregroundStyle(fetchedValues != nil ? Color.accentColor : .secondary)
+                                .foregroundStyle(fetchedValues != nil ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                         }
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.plain)
                     .disabled(isFetchingValues)
                     .help("Fetch available values from connected camera")
                 }
                 if let msg = fetchMessage {
                     Text(msg)
                         .font(.caption)
-                        .foregroundStyle(fetchedValues != nil ? Color.accentColor : .red)
+                        .foregroundStyle(fetchedValues != nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.red))
                 }
 
             case .relative(let dir, let steps):
