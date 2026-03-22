@@ -7,11 +7,10 @@ A macOS utility that floats above Capture One and lets photographers build and r
 1. Go to [Releases](../../releases) and download the latest `Cadence-vX.X.X.dmg`
 2. Open the DMG and drag **Cadence** to your Applications folder
 3. **First launch — macOS will block it.** Do this once to allow it:
-   - Open **Finder** → go to **Applications**
-   - **Right-click** Cadence → choose **Open** (don't double-click)
-   - Click **Open** in the dialog that appears
-
-> If you see "Move to Trash" with no Open button, you double-clicked. Close that dialog and right-click instead.
+   - Try to open Cadence (double-click or right-click → Open) — macOS will show a warning, click **Done**
+   - Open **System Settings** → **Privacy & Security**
+   - Scroll down to the Security section — you'll see _"Cadence was blocked"_ with an **Open Anyway** button
+   - Click **Open Anyway**, enter your password if prompted, then click **Open**
 
 ## Requirements
 

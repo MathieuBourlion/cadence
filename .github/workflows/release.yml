@@ -64,11 +64,10 @@ jobs:
             1. Download `Cadence-${{ github.ref_name }}.dmg` below
             2. Open the DMG and drag **Cadence** to your Applications folder
             3. **First launch — macOS will block it.** Do this once to allow it:
-               - Open **Finder** → go to **Applications**
-               - **Right-click** Cadence → choose **Open** (don't double-click)
-               - Click **Open** in the dialog that appears
-
-            > If you see "Move to Trash" with no Open button, you double-clicked. Close that dialog and right-click instead.
+               - Try to open Cadence — macOS will show a warning, click **Done**
+               - Open **System Settings** → **Privacy & Security**
+               - Scroll down to the Security section — you'll see _"Cadence was blocked"_ with an **Open Anyway** button
+               - Click **Open Anyway**, enter your password if prompted, then click **Open**
 
             ## Requirements
 
