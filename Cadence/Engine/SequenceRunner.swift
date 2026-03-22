@@ -119,8 +119,7 @@ final class SequenceRunner {
         } else { failed.append("ISO") }
 
         if case .success(let values) = await apertureTask.value, !values.isEmpty {
-            // Normalize to "f/" prefix to match static list format
-            fetchedAperture = values.map { $0.hasPrefix("f/") ? $0 : "f/\($0)" }
+            fetchedAperture = values  // already has "f/" prefix from fetchAvailableAperture
             loaded.append("aperture")
         } else { failed.append("aperture") }
 

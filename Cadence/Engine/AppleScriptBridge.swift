@@ -92,18 +92,28 @@ enum AppleScriptBridge {
 
     // MARK: - Available value lists (fetched from connected camera)
 
-    // Note: property names like "ISO values" require |...| quoting because "ISO" and "aperture"
-    // are also valid single-word properties — the parser would stop there otherwise.
+    // C1 returns these as pipe-delimited strings (e.g. "Auto|100|200|400"), not AppleScript lists.
     static func fetchAvailableISO() -> Result<[String], AppleScriptError> {
-        executeForList(#"tell application "Capture One" to get |ISO values| of camera of front document"#)
+        executeForString(#"available ISO settings of camera of front document of application "Capture One""#)
+            .map { parsePipeDelimited($0, skipValues: ["Auto"]) }
     }
 
     static func fetchAvailableAperture() -> Result<[String], AppleScriptError> {
-        executeForList(#"tell application "Capture One" to get |aperture values| of camera of front document"#)
+        // C1 returns numeric strings ("3.5", "8") — add "f/" prefix for display consistency
+        executeForString(#"available aperture settings of camera of front document of application "Capture One""#)
+            .map { parsePipeDelimited($0).map { "f/\($0)" } }
     }
 
     static func fetchAvailableShutterSpeed() -> Result<[String], AppleScriptError> {
-        executeForList(#"tell application "Capture One" to get |shutter speed values| of camera of front document"#)
+        executeForString(#"available shutter speeds of camera of front document of application "Capture One""#)
+            .map { parsePipeDelimited($0) }
+    }
+
+    private static func parsePipeDelimited(_ str: String, skipValues: Set<String> = []) -> [String] {
+        str.split(separator: "|").compactMap { v in
+            let s = String(v).trimmingCharacters(in: .whitespaces)
+            return s.isEmpty || skipValues.contains(s) ? nil : s
+        }
     }
 
     // MARK: - Current value reads (for relative mode)
