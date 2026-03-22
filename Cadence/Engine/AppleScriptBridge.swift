@@ -107,19 +107,19 @@ enum AppleScriptBridge {
     // MARK: - Current value reads (for relative mode)
 
     static func fetchCurrentCamera() -> Result<String, AppleScriptError> {
-        executeForString(#"name of camera of front document of application "Capture One""#)
+        executeForString(#"tell application "Capture One" to get name of camera of front document"#)
     }
 
     static func fetchCurrentISO() -> Result<String, AppleScriptError> {
-        executeForString(#"ISO of camera of front document of application "Capture One""#)
+        executeForString(#"tell application "Capture One" to get ISO of camera of front document"#)
     }
 
     static func fetchCurrentAperture() -> Result<String, AppleScriptError> {
-        executeForString(#"aperture of camera of front document of application "Capture One""#)
+        executeForString(#"tell application "Capture One" to get aperture of camera of front document"#)
     }
 
     static func fetchCurrentShutterSpeed() -> Result<String, AppleScriptError> {
-        executeForString(#"shutter speed of camera of front document of application "Capture One""#)
+        executeForString(#"tell application "Capture One" to get shutter speed of camera of front document"#)
     }
 
     // MARK: - Step scripts
@@ -185,13 +185,13 @@ enum AppleScriptBridge {
         switch step {
         case .setISO(let mode):
             guard case .absolute = mode else { return nil }  // relative handles its own read-back
-            return #"ISO of camera of front document of application "Capture One""#
+            return #"tell application "Capture One" to get ISO of camera of front document"#
         case .setAperture(let mode):
             guard case .absolute = mode else { return nil }
-            return #"aperture of camera of front document of application "Capture One""#
+            return #"tell application "Capture One" to get aperture of camera of front document"#
         case .setShutterSpeed(let mode):
             guard case .absolute = mode else { return nil }
-            return #"shutter speed of camera of front document of application "Capture One""#
+            return #"tell application "Capture One" to get shutter speed of camera of front document"#
         default:
             return nil
         }

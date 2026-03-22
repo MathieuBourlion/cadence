@@ -178,7 +178,8 @@ final class SequenceRunner {
                 fetch: AppleScriptBridge.fetchCurrentISO,
                 list: SequenceStep.isoValues,
                 direction: dir, steps: steps, settingName: "ISO",
-                readBackScript: #"ISO of camera of front document of application "Capture One""#,
+                normalize: { $0 },
+                readBackScript: #"tell application "Capture One" to get ISO of camera of front document"#,
                 setScript: { #"tell application "Capture One" to set ISO of camera of front document to "\#($0)""# }
             )
         case .setAperture(let mode):
@@ -187,7 +188,8 @@ final class SequenceRunner {
                 fetch: AppleScriptBridge.fetchCurrentAperture,
                 list: SequenceStep.apertureValues,
                 direction: dir, steps: steps, settingName: "aperture",
-                readBackScript: #"aperture of camera of front document of application "Capture One""#,
+                normalize: { "f/\($0)" },  // C1 returns "2.8"; list uses "f/2.8"
+                readBackScript: #"tell application "Capture One" to get aperture of camera of front document"#,
                 setScript: { value in
                     let v = value.hasPrefix("f/") ? String(value.dropFirst(2)) : value
                     return #"tell application "Capture One" to set aperture of camera of front document to "\#(v)""#
@@ -199,7 +201,8 @@ final class SequenceRunner {
                 fetch: AppleScriptBridge.fetchCurrentShutterSpeed,
                 list: SequenceStep.shutterSpeedValues,
                 direction: dir, steps: steps, settingName: "shutter speed",
-                readBackScript: #"shutter speed of camera of front document of application "Capture One""#,
+                normalize: { $0 },
+                readBackScript: #"tell application "Capture One" to get shutter speed of camera of front document"#,
                 setScript: { value in
                     let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
                     return #"tell application "Capture One" to set shutter speed of camera of front document to "\#(escaped)""#
@@ -216,12 +219,17 @@ final class SequenceRunner {
         direction: RelativeDirection,
         steps: Int,
         settingName: String,
+        normalize: @escaping @Sendable (String) -> String,
         readBackScript: String,
         setScript: @escaping @Sendable (String) -> String
     ) async -> Bool {
         let fetchResult = await Task.detached(priority: .userInitiated) { fetch() }.value
-        guard case .success(let currentValue) = fetchResult,
-              let currentIndex = list.firstIndex(of: currentValue) else {
+        guard case .success(let rawValue) = fetchResult else {
+            showToast("Could not read current \(settingName); skipping step")
+            return true
+        }
+        let currentValue = normalize(rawValue)
+        guard let currentIndex = list.firstIndex(of: currentValue) else {
             showToast("Could not read current \(settingName); skipping step")
             return true
         }
