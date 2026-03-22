@@ -92,40 +92,18 @@ enum AppleScriptBridge {
 
     // MARK: - Available value lists (fetched from connected camera)
 
+    // Note: property names like "ISO values" require |...| quoting because "ISO" and "aperture"
+    // are also valid single-word properties — the parser would stop there otherwise.
     static func fetchAvailableISO() -> Result<[String], AppleScriptError> {
-        executeForList("""
-        tell application "Capture One"
-            tell front document
-                tell camera
-                    get ISO values
-                end tell
-            end tell
-        end tell
-        """)
+        executeForList(#"tell application "Capture One" to get |ISO values| of camera of front document"#)
     }
 
     static func fetchAvailableAperture() -> Result<[String], AppleScriptError> {
-        executeForList("""
-        tell application "Capture One"
-            tell front document
-                tell camera
-                    get aperture values
-                end tell
-            end tell
-        end tell
-        """)
+        executeForList(#"tell application "Capture One" to get |aperture values| of camera of front document"#)
     }
 
     static func fetchAvailableShutterSpeed() -> Result<[String], AppleScriptError> {
-        executeForList("""
-        tell application "Capture One"
-            tell front document
-                tell camera
-                    get shutter speed values
-                end tell
-            end tell
-        end tell
-        """)
+        executeForList(#"tell application "Capture One" to get |shutter speed values| of camera of front document"#)
     }
 
     // MARK: - Current value reads (for relative mode)

@@ -40,9 +40,19 @@ struct ContentView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Cadence")
-                    .font(.headline)
-                    .fontWeight(.medium)
+                Button(action: { Task { await runner.fetchAllValues() } }) {
+                    if runner.isFetchingAllValues {
+                        ProgressView().controlSize(.mini).frame(width: 22, height: 22)
+                    } else {
+                        Image(systemName: "camera")
+                            .font(.system(size: 14))
+                            .frame(width: 22, height: 22)
+                    }
+                }
+                .buttonStyle(.borderless)
+                .disabled(runner.isRunning || runner.isFetchingAllValues)
+                .help("Load ISO, aperture, and shutter speed values from the connected camera")
+
                 Spacer()
                 HStack(spacing: 4) {
                 Button(action: { showSavePresetSheet = true }) {
@@ -68,20 +78,6 @@ struct ContentView: View {
                         onLoad: loadPreset
                     )
                 }
-
-                Button(action: { Task { await runner.fetchAllValues() } }) {
-                    if runner.isFetchingAllValues {
-                        ProgressView().controlSize(.mini).frame(width: 22, height: 22)
-                    } else {
-                        Image(systemName: "camera")
-                            .font(.system(size: 14))
-                            .frame(width: 22, height: 22)
-                            .foregroundStyle(runner.fetchedISO.isEmpty ? .secondary : Color.accentColor)
-                    }
-                }
-                .buttonStyle(.borderless)
-                .disabled(runner.isRunning || runner.isFetchingAllValues)
-                .help("Load ISO, aperture, and shutter speed values from the connected camera")
                 } // HStack(spacing: 4)
             }
             .padding(.horizontal)
