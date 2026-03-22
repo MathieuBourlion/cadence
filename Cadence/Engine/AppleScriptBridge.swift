@@ -151,7 +151,7 @@ enum AppleScriptBridge {
             return #"set shutter speed of camera of front document of application "Capture One" to "\#(escaped)""#
 
         case .autofocus:
-            return #"set autofocusing of camera of front document of application "Capture One" to true"#
+            return #"tell application "Capture One" to set autofocusing of camera of front document to true"#
 
         case .moveFocus(let direction, let amount):
             let n = moveFocusAmount(direction: direction, amount: amount)
