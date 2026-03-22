@@ -30,7 +30,7 @@ final class SequenceRunner {
         }
     }
 
-    func run(steps: [SequenceStep], repeatCount: Int = 1) {
+    func run(steps: [SequenceStep], setupMask: [Bool] = [], repeatCount: Int = 1) {
         guard !isRunning else { return }
         guard steps.allSatisfy(\.isComplete) else {
             error = AppleScriptError(message: "Complete all steps before running.")
@@ -70,6 +70,12 @@ final class SequenceRunner {
 
                 for (index, step) in steps.enumerated() {
                     if Task.isCancelled { break outer }
+
+                    // Skip "first pass only" steps on subsequent iterations
+                    if iteration > 1 && index < setupMask.count && setupMask[index] {
+                        continue
+                    }
+
                     currentStepIndex = index
 
                     let success = await executeStep(step)

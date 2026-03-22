@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StepCardView: View {
     @Binding var step: SequenceStep
+    @Binding var firstIterationOnly: Bool
     let isExpanded: Bool
     let executionState: StepExecutionState
     let onTap: () -> Void
@@ -40,11 +41,24 @@ struct StepCardView: View {
                         Text(step.configSummary)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        if firstIterationOnly {
+                            Text("First pass only")
+                                .font(.caption2)
+                                .foregroundStyle(Color.accentColor)
+                        }
                     }
 
                     Spacer()
 
                     HStack(spacing: 2) {
+                        Button(action: { firstIterationOnly.toggle() }) {
+                            Image(systemName: firstIterationOnly ? "1.circle.fill" : "1.circle")
+                                .font(.system(size: 13))
+                                .foregroundStyle(firstIterationOnly ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
+                        }
+                        .buttonStyle(.borderless)
+                        .help("First pass only — this step runs once and is skipped on repeat iterations")
+
                         Button(action: onMoveUp) {
                             Image(systemName: "chevron.up")
                                 .font(.system(size: 11))

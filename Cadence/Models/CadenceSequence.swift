@@ -5,10 +5,14 @@ import Foundation
 struct CadenceSequence: Codable {
     var name: String?
     var steps: [SequenceStep]
+    /// Parallel to `steps`. `true` = step runs on first iteration only and is skipped on repeats.
+    /// Optional for backward compatibility with presets saved before this field existed.
+    var firstIterationOnly: [Bool]?
 
-    init(name: String? = nil, steps: [SequenceStep] = []) {
+    init(name: String? = nil, steps: [SequenceStep] = [], firstIterationOnly: [Bool]? = nil) {
         self.name = name
         self.steps = steps
+        self.firstIterationOnly = firstIterationOnly
     }
 
     /// True if the sequence has steps and all steps are complete.
@@ -26,6 +30,6 @@ struct CadenceSequence: Codable {
             }
             return step
         }
-        return CadenceSequence(name: name, steps: strippedSteps)
+        return CadenceSequence(name: name, steps: strippedSteps, firstIterationOnly: firstIterationOnly)
     }
 }

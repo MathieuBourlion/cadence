@@ -6,10 +6,12 @@ import SwiftUI
 struct IdentifiableStep: Identifiable {
     let id: UUID
     var step: SequenceStep
+    var firstIterationOnly: Bool = false
 
-    init(step: SequenceStep) {
+    init(step: SequenceStep, firstIterationOnly: Bool = false) {
         self.id = UUID()
         self.step = step
+        self.firstIterationOnly = firstIterationOnly
     }
 }
 
@@ -91,6 +93,7 @@ struct ContentView: View {
                     ForEach(Array(steps.enumerated()), id: \.element.id) { index, item in
                         StepCardView(
                             step: binding(for: item.id),
+                            firstIterationOnly: firstIterationOnlyBinding(for: item.id),
                             isExpanded: expandedStepID == item.id,
                             executionState: executionState(for: index),
                             onTap: { toggleExpanded(item.id) },
@@ -148,7 +151,7 @@ struct ContentView: View {
                 canRun: canRun,
                 runLabel: runLabel,
                 repeatCount: repeatCount,
-                onRun: { runner.run(steps: steps.map(\.step), repeatCount: repeatCount) },
+                onRun: { runner.run(steps: steps.map(\.step), setupMask: steps.map(\.firstIterationOnly), repeatCount: repeatCount) },
                 onStop: { runner.stop() },
                 onReset: { showResetConfirmation = true },
                 onRepeatCountChange: { repeatCount = max(1, min(99, $0)) }
@@ -180,7 +183,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSavePresetSheet) {
             SavePresetSheet(presetManager: presetManager) { name in
-                let seq = CadenceSequence(name: name, steps: steps.map(\.step))
+                let seq = CadenceSequence(name: name, steps: steps.map(\.step), firstIterationOnly: steps.map(\.firstIterationOnly))
                 do {
                     try presetManager.save(seq, name: name)
                 } catch {
@@ -249,8 +252,21 @@ struct ContentView: View {
         steps.move(fromOffsets: IndexSet(integer: index), toOffset: delta > 0 ? newIndex + 1 : newIndex)
     }
 
+    private func firstIterationOnlyBinding(for id: UUID) -> Binding<Bool> {
+        Binding(
+            get: { steps.first(where: { $0.id == id })?.firstIterationOnly ?? false },
+            set: { newValue in
+                if let index = steps.firstIndex(where: { $0.id == id }) {
+                    steps[index].firstIterationOnly = newValue
+                }
+            }
+        )
+    }
+
     private func loadPreset(_ sequence: CadenceSequence) {
-        steps = sequence.steps.map { IdentifiableStep(step: $0) }
+        steps = sequence.steps.enumerated().map { index, step in
+            IdentifiableStep(step: step, firstIterationOnly: sequence.firstIterationOnly?[index] ?? false)
+        }
         expandedStepID = nil
         showPresetsPopover = false
     }
