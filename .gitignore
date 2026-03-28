@@ -1,2 +1,16 @@
+# Build artifacts
+build/
+
+# macOS
+.DS_Store
+
+# Xcode user data
+Cadence.xcodeproj/xcuserdata/
+Cadence.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Claude Code
+.claude/
+
+# Superpowers
 .superpowers/
 .worktrees/
