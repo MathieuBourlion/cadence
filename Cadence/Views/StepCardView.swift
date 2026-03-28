@@ -265,8 +265,16 @@ struct StepCardView: View {
         defaultAbsolute: String,
         makeStep: @escaping (CameraValueMode) -> Void
     ) -> some View {
-        // Priority: per-step fetch > global fetch > static fallback
-        let displayValues = fetchedValues ?? (globalValues.isEmpty ? values : globalValues)
+        // Priority: per-step fetch > global fetch > static fallback.
+        // Always include the current value so the Picker never has an orphaned selection,
+        // which can crash AppKit's NSPopUpButton during constraint updates (SIGABRT).
+        let baseValues = fetchedValues ?? (globalValues.isEmpty ? values : globalValues)
+        let currentValue: String? = if case .absolute(let v) = mode { v } else { nil }
+        let displayValues = if let currentValue, !baseValues.contains(currentValue) {
+            [currentValue] + baseValues
+        } else {
+            baseValues
+        }
         VStack(alignment: .leading, spacing: 8) {
             Picker("Mode", selection: Binding(
                 get: { if case .relative = mode { return "relative" } else { return "absolute" } },
@@ -360,7 +368,9 @@ struct StepCardView: View {
 
     private func fetchCameras() async {
         cameraListError = nil
-        let result = AppleScriptBridge.fetchCameraList()
+        let result = await Task.detached(priority: .userInitiated) {
+            AppleScriptBridge.fetchCameraList()
+        }.value
         switch result {
         case .success(let cameras):
             cameraList = cameras
